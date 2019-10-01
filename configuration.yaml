@@ -1,0 +1,55 @@
+calibration:
+  ph:
+    chan1:
+      a: -8.33
+      b: 6.13
+      date: 01/10/2019 21:55:03
+    chan2:
+      a: -8.23
+      b: 6.55
+      date: 01/10/2019 20:36:45
+    chan3:
+      a: -8.32
+      b: 6.83
+      date: 01/10/2019 21:43:56
+    default_cal:
+      ph1: 4.0
+      ph2: 7.0
+  temperature: 20.01
+  temperatureDefault: 20.01
+  temperatureMax: 50
+  temperatureMin: 10
+i2c:
+  ph_channels:
+    1: 64
+    2: 65
+    3: 67
+  valves_islands:
+    channels:
+      1:
+        CO2: FEFF
+        N2: FDFF
+      2:
+        CO2: FBFF
+        N2: F7FF
+      3:
+        CO2: EFFF
+        N2: DFFF
+      4:
+        CO2: BFFF
+        N2: 7FFF
+      5:
+        CO2: FFFE
+        N2: FFFD
+      6:
+        CO2: FFFB
+        N2: FFF7
+    valves_addresses:
+      1: 32
+interface:
+  ph_step: 2
+  precision: 2
+  time: hh:mm
+  time_step: 60
+os_integration:
+  fifo_path: /tmp/pigrad_i2c_bus.fifo

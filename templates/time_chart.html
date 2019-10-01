@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>pH manager</title>
+    <!-- import plugin script -->
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-dragdata@1.0.1/dist/chartjs-plugin-dragData.min.js"></script>
+
+	<style>
+	table {
+	  border: 1px solid black;
+	}
+		th, td {
+	  border-bottom: 1px solid #ddd;
+	}
+	tr:hover {background-color:#f5f5f5;}
+	</style>
+  </head>
+  <body>
+    <h1>pH #1</h1>
+    <!-- bar chart canvas element -->
+    <div class="chart-container" style="position: relative; height:40vh; width:90vw">
+    <canvas id="myChart" width="1800" height="400"></canvas>
+   
+    <p id="pointSelected">Point selected:</p>
+	
+	 <table id="tblData" style="width:100%">
+   <tr>
+    <td>Index</td>
+    <td>1</td>
+	<td>2</td>
+	<td>3</td>
+	
+  </tr>
+  <tr>
+    <td>Expected pH</td>
+    <td><input type="text"  value="7.03" size="1" onchange="reloadChart()"/></td>
+	<td><input type="text"  value="8.0005" size="1" onchange="reloadChart()"/></td>
+	<td><input type="text"  value="8.0006" size="1" onchange="reloadChart()"/></td>
+
+  </tr>
+  <tr>
+    <td>Time</td>
+	<td><input type="text"  value="00:00:00" size="1" maxlength="8" onchange="reloadChart()"/></td>
+    <td><input type="text"  value="00:01:00" size="1" maxlength="8" onchange="reloadChart()"/></td>
+	<td><input type="text"  value="00:02:00" size="1" maxlength="8" onchange="reloadChart()"/></td>
+	
+  </tr>
+</table> 
+   <input id="add" type="submit" name="add_button" value="Add step">
+	<progress id="animationProgress" max="1" value="0" style="width: 100%"></progress>
+	<input id="start" type="submit" name="start_button" value="Start">
+	<input id="stop" type="submit" name="stop_button" value="Stop">
+ </div>
+
+    <script>
+      // Global parameters:
+      // do not resize the chart canvas when its container does (keep at 600x400px)
+      Chart.defaults.global.responsive = true;
+	var tbl = document.getElementById("tblData");
+      var timeFormat = 'mm:ss';
+      var colCount = tbl.rows[0].cells.length;
+	  var rowCount = tbl.rows.length;
+      function newDateString( minutes, seconds) {
+		return moment().minute(minutes).second(seconds).format(timeFormat);
+	  }
+	
+	var values=[];
+	var labels=[];
+	
+	var i;
+	for (i = 1; i < colCount; i++) {
+	  labels.push(tbl.rows[rowCount - 1].cells[i].children[0].value);
+	  values.push(tbl.rows[rowCount - 2].cells[i].children[0].value);
+	} 
+	
+      // define the chart data
+      var chartData = {
+        labels : labels,
+        datasets : [{
+            label: '{{ legend }}',
+            fill: true,
+            lineTension: 0.1,
+            backgroundColor: "rgba(75,192,192,0.4)",
+            borderColor: "rgba(75,192,192,1)",
+            borderCapStyle: 'butt',
+            borderDash: [],
+            borderDashOffset: 0.0,
+            borderJoinStyle: 'miter',
+            pointBorderColor: "rgba(75,192,192,1)",
+            pointBackgroundColor: "#fff",
+            pointBorderWidth: 1,
+            pointHoverRadius: 5,
+            pointHoverBackgroundColor: "rgba(75,192,192,1)",
+            pointHoverBorderColor: "rgba(220,220,220,1)",
+            pointHoverBorderWidth: 2,
+            pointRadius: 1,
+            pointHitRadius: 10,
+            data : values,
+            spanGaps: false,
+	    steppedLine: 'middle',
+	    responsive: true
+        }]
+      }
+
+      // get chart canvas
+      var holder = document.getElementById("myChart");
+      var ctx = document.getElementById("myChart").getContext("2d");
+      var progress = document.getElementById('animationProgress');
+	 var processStop = false;
+	document.getElementById("start").addEventListener("click", function() {
+	    anim(progress, 0, 17000, 10)
+		 var data = {'start_button': 'Start'};
+		  $.ajax({
+       type : "POST",
+   data: data,
+       //contentType: 'application/json;charset=UTF-8',
+     
+       
+   });
+	});
+	document.getElementById("stop").addEventListener("click", function() {
+	    stopAnim()
+		var dataStop = {'start_button': 'Stop'};
+		 $.ajax({
+       type : "POST",
+   data: dataStop,
+       //contentType: 'application/json;charset=UTF-8',
+     
+
+   });
+	}); 
+	document.getElementById("add").addEventListener("click", function() {
+	    Add_value()
+		reloadChart()
+	}); 
+	
+
+	
+     
+
+      // create the chart using the chart canvas
+      var myChart = new Chart(ctx, {
+        type: 'line',
+        data: chartData,
+	
+	
+        options: {
+	 dragData: true,
+	 dragDataRound: 2,
+	 onDrag: function (e, datasetIndex, index, value) {
+      console.log(value);
+	  tbl.rows[rowCount - 2].cells[index+1].children[0].value=value;
+    },
+	 scales: {
+		yAxes:[{
+			ticks:{
+				max: 14,
+				min: 0,
+				stepSize: 1.0
+				}}]},
+	
+          tooltips: {
+            enabled: true,
+            mode: 'single',
+            callbacks: {
+              label: function(tooltipItems, data) {
+                       firstPointCtx = "First Point Selected: ";
+                       return tooltipItems.yLabel + ' pH';
+                     }
+            }
+
+          },
+	
+	
+        }
+      });
+  // get the text element below the chart
+      var pointSelected = document.getElementById("pointSelected");
+
+      // create a callback function for updating the selected index on the chart
+      holder.onclick = function(evt){
+        var activePoint = myChart.getElementAtEvent(evt);
+        console.log(activePoint);
+        console.log('x:' + activePoint[0]._view.x);
+        console.log('maxWidth: ' + activePoint[0]._xScale.maxWidth);
+        console.log('y: ' + activePoint[0]._view.y);
+        console.log('index: ' + activePoint[0]._index);
+        pointSelected.innerHTML = 'Point selected... index: ' + (activePoint[0]._index +1);
+      };
+	  
+	  function anim(element, time, maxTime, offset)
+	  {
+		 if( processStop == false) {
+	      element.value = time / maxTime;
+		  if (element.value >= 1)
+		  {
+		      return;
+		  }
+	
+	      window.setTimeout(function() {
+		      anim(element, time + offset, maxTime, offset);
+		  }, Math.min(maxTime - time, offset));
+		  }
+		  else processStop = false;
+	  }
+	  
+	 function stopAnim()
+	  {
+		processStop=true;
+	  } 
+	  
+   var iter = 4;
+	
+	function Add_value(){
+	
+	 $("#tblData").find('tr').each(function(){
+      var trow = $(this);   
+         if(trow.index() === 0){
+            trow.append("<td>"+iter+"</td>");
+         }else{
+             trow.append("<td><input size='1' type='text' onchange='reloadChart()'/></td>");
+         } 
+     });
+     iter += 1;
+		 
+			
+	}; 
+	
+	function reloadChart() {
+		values=[];
+		labels=[];
+		
+	    colCount = tbl.rows[0].cells.length;
+	    rowCount = tbl.rows.length;
+		
+		var i;
+		for (i = 1; i < colCount; i++) {
+		  labels.push(tbl.rows[rowCount - 1].cells[i].children[0].value);
+		  values.push(tbl.rows[rowCount - 2].cells[i].children[0].value);
+		} 
+		myChart.data.labels=labels;
+		myChart.data.datasets[0].data=values;
+		myChart.update();
+  }
+		
+     
+    </script>
+	
+  </body>
+</html>
+

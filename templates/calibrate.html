@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Calibration</title>
+    <!-- import plugin script -->
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+ 
+<style>
+	.areaM {
+		float: left;
+		width: 30%;
+		 height: 400px;
+	}
+	.buttoncal {
+		float: left;
+		width: 30%;
+	}
+	
+	.line {
+		float: left;
+		height: 10%;
+		width: 100%;
+
+	}
+	</style>
+	
+  </head>
+  <body onload="updateTemp()">
+   
+    
+    <div class="areaM" >
+		 <h1>Calibrate</h1>
+		 <select name="dropdown">
+		
+			  <option value="1" selected>Channel 1</option>
+			  <option value="2">Channel 2</option>
+			  <option value="3">Channel 3</option>
+		  </select> 
+	</div>
+	
+	
+    <div class="areaM" >
+			<div class="line" > 
+					<div class="buttoncal" > <label>PH1 </label></div>
+					<div class="buttoncal" > <label></label></div>
+					<div class="buttoncal" > <label>PH2 </label></div>
+			</div>
+			
+			<div class="line" > 
+					<div class="buttoncal" > <input type="text"  id="ph1" value={{data['calibration']['ph']['default_cal']['ph1'] }} size="1"/> </div>
+					<div class="buttoncal" > <input type="text"  id="ph2" value={{data['calibration']['ph']['default_cal']['ph2'] }}  size="1"/> </div>
+
+
+		   </div>
+		   
+		   <div class="line" > 
+					<div class="buttoncal" > <input id="cal1_button" type="submit" name="cal1_button" value="CAL1" style="width: 45%; height: 100%" onclick="enableButtonFromCal1()"></div>
+					<div class="buttoncal" > <input id="cal2_button" type="submit" name="cal2_button" value="CAL2" style="width: 45%; height: 100%" onclick="enableButtonFromCal2()"></div>
+
+
+		   </div>
+		   
+		   <div class="line" > 
+					<input id="calibrate_button" type="submit" name="cali_button" value="CALIBRATE" style="width: 44%; height: 100%" disabled>
+				
+					
+			
+		   </div>
+		   <div class="line" > 
+			   <label>Last calibratrion: </label>
+			   <label id="dateLabel">  </label>
+		   </div>
+		   <div class="line">
+					 <div class="buttoncal" > <label>Temperature: </label>	</div>
+					
+		   </div>
+		   <div class="line">
+					 
+					<div class="buttoncal" > <input type="text"  id="temp" value={{data['calibration']['temperature']}} size="1" onchange="sendTemp()"/> </div>
+		   </div>
+		   <div class="line">
+					<div class="buttoncal" > <input id="temp_button" type="submit" name="temp_button" value="Update" style="width: 45%; height: 100%" onclick="updateTemp()"></div>
+
+		   </div>
+		   
+     </div>
+	 
+	 
+	
+
+    <script>
+		var cal1Click = false;
+		var cal2Click = false;
+		$('select[name="dropdown"]').change(function(){
+
+				setValues();
+				
+		   
+		});
+		
+		
+		document.getElementById("cal1_button").addEventListener("click", function() {
+	    
+		var dataStop = {'cal_button': 'cal1'};
+		 $.ajax({
+       type : "POST",
+		data: dataStop,
+     
+
+		});
+		
+	}); 
+	
+	document.getElementById("cal2_button").addEventListener("click", function() {
+	    
+		var dataStop = {'cal_button': 'cal2'};
+		 $.ajax({
+       type : "POST",
+		data: dataStop,
+     
+
+		});
+	}); 
+	document.getElementById("calibrate_button").addEventListener("click", function() {
+	    
+		var dataStop = {'cal_button': 'calibrate', 'channel':$('select[name="dropdown"]').val()};
+		 $.ajax({
+       type : "POST",
+		data: dataStop,
+		success: function(response){
+
+			dateLabel.innerHTML=response;
+		}
+
+		});
+		
+	}); 
+	
+	function enableButtonFromCal1() {
+			cal1Click = true;
+			if (cal2Click == true){
+            document.getElementById("calibrate_button").disabled = false;
+			}
+      }
+	  
+	  function enableButtonFromCal2() {
+			cal2Click = true;
+			if (cal1Click == true){
+            document.getElementById("calibrate_button").disabled = false;
+			}
+      }
+	  
+	  function updateTemp(){
+		setValues();
+		  var dataStop = {'cal_button' : 'update'};
+			 $.ajax({
+		   type : "POST",
+			data: dataStop,
+			success: function(response){
+
+				temp.value=response;
+			}
+
+			});
+			
+	  }
+	  
+	  function sendTemp(){
+	  
+		
+		  var dataStop = {'cal_button' : 'sendTemp', 'temp':temp.value};
+			 $.ajax({
+		   type : "POST",
+			data: dataStop,
+		
+			success: function(response){
+
+				temp.value=response;
+			}
+
+			});
+			
+	  }
+	  
+	  function setValues(){
+	  
+	  
+				 if ($('select[name="dropdown"]').val() == "1"){
+					
+					ph1.value= {{data['calibration']['ph']['chan1']['a'] }};
+					ph2.value= {{data['calibration']['ph']['chan1']['b'] }};
+					dateLabel.innerHTML=' {{data['calibration']['ph']['chan1']['date'] }}' ;
+				 }   
+				if ($('select[name="dropdown"]').val() == "2"){
+					
+					ph1.value= {{data['calibration']['ph']['chan2']['a'] }};
+					ph2.value= {{data['calibration']['ph']['chan2']['b'] }};
+					dateLabel.innerHTML=' {{data['calibration']['ph']['chan2']['date'] }} ';
+				 }   
+				 if ($('select[name="dropdown"]').val() == "3"){
+					ph1.value= {{data['calibration']['ph']['chan3']['a'] }};
+					ph2.value= {{data['calibration']['ph']['chan3']['b'] }};
+					dateLabel.innerHTML=' {{data['calibration']['ph']['chan3']['date'] }}' ;
+				 }   
+				 
+				cal1Click = false;
+				cal2Click = false;
+				document.getElementById("calibrate_button").disabled = true;
+	  }
+	  
+	  
+	  
+     
+    </script>
+	
+  </body>
+</html>
+
