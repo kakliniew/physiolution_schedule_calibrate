@@ -1,7 +1,6 @@
 # physiolution_schedule_calibrate
 
-Repozytorium należy sklonować na dysk.
-Składa się ono z 3 głównych elementów:
+Repozytorium składa się z 3 głównych elementów:
 - pliku app.py - jest to aplikcja Flask obsługująca cały backend aplikacji
 - configuration.yaml - pliku zawierającego wszystkie wartosci konfiguracyjne aplikacji
 - folderu templates - zawiera on wszystkie szablony stron, które są potem przetwarzane przez Flaska.
@@ -19,12 +18,21 @@ Do uruchomienia aplikaji będzie jednak potrzebne:
 - Flask
 - PyYaml
 
-W celu uruchomienia aplikacji należy wejśc do głównego folderu i wpisać w konsoli polecenie
+W celu uruchomienia aplikacji należy:
+1. Repozytorium sklonować na dysk. 
+2. Wejśc do głównego folderu, uruchomić konsolę i wpisać polecenie
 "python app.py"
 
 Zostanie wtedy uruchomiony serwer Flask i dostępne będą dwa widoki pod adresami:
 - http://127.0.0.1:5000/time_chart.html - strona do tworzenia harmonogramów przebiegu eksperymentu
 - http://127.0.0.1:5000/calibrate.html - strona do kalibrowania urządzeń pomiarowych
+
+#Struktura plików#
+Pliki umieszczone w folderze templates mają do siebie zbliżoną strukturę - na samej górze załączone są skrypty, poniżej ewentualny kod stylu,
+później umieszczona jest zawartość HTML, a na samym dole skrypty JavaScript. 
+
+W pliku app.py na początku umieszczczone są importowane biblioteki, poniżej kontrolery dla określonych routingów, funkcje używane w kontrolerach. 
+
 
 
 
