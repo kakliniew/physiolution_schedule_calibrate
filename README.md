@@ -1,9 +1,9 @@
 # physiolution_schedule_calibrate
 
 Repozytorium składa się z 3 głównych elementów:
-- pliku app.py - jest to aplikcja Flask obsługująca cały backend aplikacji
-- configuration.yaml - pliku zawierającego wszystkie wartosci konfiguracyjne aplikacji
-- folderu templates - zawiera on wszystkie szablony stron, które są potem przetwarzane przez Flaska.
+- plik app.py - kod źródłowy aplikcji używającej Flask'a, obsługująca cały backend aplikacji,
+- configuration.yaml - plik zawierającego wszystkie wartosci konfiguracyjne aplikacji,
+- folder templates - zawiera on wszystkie szablony stron, które są potem przetwarzane przez Flaska.
 
 Wszystkie skrypty używane przez aplikację są składowane w CDN, dlatego nie znajdują się w folderze lokalnie. Jednak wymaga to połączenia z internetem przy uruchomianiu aplikacji.
 Używane skrypty to:
