@@ -27,7 +27,7 @@ Zostanie wtedy uruchomiony serwer Flask i dostępne będą dwa widoki pod adresa
 - http://127.0.0.1:5000/time_chart.html - strona do tworzenia harmonogramów przebiegu eksperymentu
 - http://127.0.0.1:5000/calibrate.html - strona do kalibrowania urządzeń pomiarowych
 
-#Struktura plików#
+Struktura plików
 Pliki umieszczone w folderze templates mają do siebie zbliżoną strukturę - na samej górze załączone są skrypty, poniżej ewentualny kod stylu,
 później umieszczona jest zawartość HTML, a na samym dole skrypty JavaScript. 
 
