@@ -79,7 +79,9 @@ def calibrate():
             with open('configuration.yaml', 'w') as f:
                 yaml.dump(data, f)
             return  str(data['calibration']['ph']['chan'+request.form["channel"]]['Tcal'])
-            
+        elif request.form['cal_button'] == 'deviation':
+            returned_value = 5
+            return str(returned_value)
     elif request.method == 'GET':
         return render_template('calibrate.html',  data=data)
 

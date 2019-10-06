@@ -4,7 +4,7 @@ calibration:
       Tcal: !!python/unicode '25.00'
       a: !!python/unicode '7.00'
       b: !!python/unicode '4.00'
-      date: 06/10/2019 15:33:29
+      date: 06/10/2019 18:17:52
     chan2:
       Tcal: !!python/unicode '22.00'
       a: !!python/unicode '7.00'
@@ -47,6 +47,7 @@ i2c:
     valves_addresses:
       1: 32
 interface:
+  example_value: 50
   ph_step: 2
   precision: 2
   temperatureDefault: 21.01

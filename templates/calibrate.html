@@ -139,6 +139,7 @@
 		success: function(response){
 
 			dateLabel.innerHTML=response;
+			calcDeviation();
 		}
 
 		});
@@ -185,6 +186,23 @@
 			success: function(response){
 
 				temp.value=parseFloat(response).toFixed(2);
+			}
+
+			});
+			
+	  }
+	  
+	  function calcDeviation(){
+	  
+		
+		  var dataStop = {'cal_button' : 'deviation'};
+			 $.ajax({
+		   type : "POST",
+			data: dataStop,
+		
+			success: function(response){
+					Deviation.innerHTML= (parseFloat(response)  / parseFloat({{data['interface']['example_value']}}))*100 +"%";
+				
 			}
 
 			});
