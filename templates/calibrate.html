@@ -41,6 +41,20 @@
 	
 	
     <div class="areaM" >
+	
+	
+		<div class="line">
+					 <div class="buttoncal" ><label><input type="checkbox" id="checkboxTemp" checked onclick="checkboxTempchange();">Temperature</label>	</div>
+					
+		   </div>
+		   <div class="line">
+					 
+					<div class="buttoncal" > <input type="text"  id="temp" value="0" size="1" onchange="sendTemp()"/> </div>
+		   </div>
+		   <div class="line">
+					<div class="buttoncal" > <input id="temp_button" type="submit" name="temp_button" value="Update" style="width: 45%; height: 100%" onclick="updateTemp()"></div>
+
+		   </div>
 			<div class="line" > 
 					<div class="buttoncal" > <label>PH1 </label></div>
 					<div class="buttoncal" > <label></label></div>
@@ -48,7 +62,7 @@
 			</div>
 			
 			<div class="line" > 
-					<div class="buttoncal" > <input type="text"  id="ph1" value={{data['calibration']['ph']['default_cal']['ph1'] }} size="1"/> </div>
+					<div class="buttoncal" > <input type="text"  id="ph1" value={{data['calibration']['ph']['default_cal']['ph1'] }}  size="1"/> </div>
 					<div class="buttoncal" > <input type="text"  id="ph2" value={{data['calibration']['ph']['default_cal']['ph2'] }}  size="1"/> </div>
 
 
@@ -71,18 +85,7 @@
 			   <label>Last calibratrion: </label>
 			   <label id="dateLabel">  </label>
 		   </div>
-		   <div class="line">
-					 <div class="buttoncal" > <label>Temperature: </label>	</div>
-					
-		   </div>
-		   <div class="line">
-					 
-					<div class="buttoncal" > <input type="text"  id="temp" value={{data['calibration']['temperature']}} size="1" onchange="sendTemp()"/> </div>
-		   </div>
-		   <div class="line">
-					<div class="buttoncal" > <input id="temp_button" type="submit" name="temp_button" value="Update" style="width: 45%; height: 100%" onclick="updateTemp()"></div>
-
-		   </div>
+		   
 		   
      </div>
 	 
@@ -94,6 +97,7 @@
 		var cal2Click = false;
 		$('select[name="dropdown"]').change(function(){
 
+				
 				setValues();
 				
 		   
@@ -124,7 +128,7 @@
 	}); 
 	document.getElementById("calibrate_button").addEventListener("click", function() {
 	    
-		var dataStop = {'cal_button': 'calibrate', 'channel':$('select[name="dropdown"]').val()};
+		var dataStop = {'cal_button': 'calibrate', 'channel':$('select[name="dropdown"]').val(), 'ph1':ph1.value,'ph2':ph2.value};
 		 $.ajax({
        type : "POST",
 		data: dataStop,
@@ -153,7 +157,7 @@
 	  
 	  function updateTemp(){
 		setValues();
-		  var dataStop = {'cal_button' : 'update'};
+		  var dataStop = {'cal_button' : 'update','channel':$('select[name="dropdown"]').val()};
 			 $.ajax({
 		   type : "POST",
 			data: dataStop,
@@ -169,7 +173,7 @@
 	  function sendTemp(){
 	  
 		
-		  var dataStop = {'cal_button' : 'sendTemp', 'temp':temp.value};
+		  var dataStop = {'cal_button' : 'sendTemp', 'temp':temp.value,'channel':$('select[name="dropdown"]').val()};
 			 $.ajax({
 		   type : "POST",
 			data: dataStop,
@@ -188,20 +192,23 @@
 	  
 				 if ($('select[name="dropdown"]').val() == "1"){
 					
-					ph1.value= {{data['calibration']['ph']['chan1']['a'] }};
+					ph1.value= {{data['calibration']['ph']['chan1']['a'] }}.toFixed(2);
 					ph2.value= {{data['calibration']['ph']['chan1']['b'] }};
 					dateLabel.innerHTML=' {{data['calibration']['ph']['chan1']['date'] }}' ;
+					temp.value = {{data['calibration']['ph']['chan1']['Tcal'] }};
 				 }   
 				if ($('select[name="dropdown"]').val() == "2"){
 					
 					ph1.value= {{data['calibration']['ph']['chan2']['a'] }};
 					ph2.value= {{data['calibration']['ph']['chan2']['b'] }};
 					dateLabel.innerHTML=' {{data['calibration']['ph']['chan2']['date'] }} ';
+					temp.value = {{data['calibration']['ph']['chan2']['Tcal'] }};
 				 }   
 				 if ($('select[name="dropdown"]').val() == "3"){
 					ph1.value= {{data['calibration']['ph']['chan3']['a'] }};
 					ph2.value= {{data['calibration']['ph']['chan3']['b'] }};
 					dateLabel.innerHTML=' {{data['calibration']['ph']['chan3']['date'] }}' ;
+					temp.value = {{data['calibration']['ph']['chan3']['Tcal'] }};
 				 }   
 				 
 				cal1Click = false;
@@ -210,7 +217,18 @@
 	  }
 	  
 	  
-	  
+	 function checkboxTempchange()
+	{
+		  if (document.getElementById('checkboxTemp').checked) 
+		  {
+		  		temp.disabled=false;
+				updateTemp();
+		  } else {
+			  temp.value=21.00;
+			  sendTemp();
+			  temp.disabled=true;
+		  }
+	}
      
     </script>
 	

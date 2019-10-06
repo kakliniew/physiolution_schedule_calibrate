@@ -1,24 +1,24 @@
 calibration:
   ph:
     chan1:
-      a: -8.33
-      b: 6.13
-      date: 01/10/2019 21:55:03
+      Tcal: !!python/unicode '21'
+      a: !!python/unicode '7.00'
+      b: !!python/unicode '4.00'
+      date: 06/10/2019 14:58:20
     chan2:
-      a: -8.23
-      b: 6.55
-      date: 01/10/2019 20:36:45
+      Tcal: !!python/unicode '21'
+      a: !!python/unicode '7'
+      b: !!python/unicode '4'
+      date: 06/10/2019 15:17:40
     chan3:
-      a: -8.32
-      b: 6.83
+      Tcal: !!python/unicode '35'
+      a: !!python/unicode '7.00'
+      b: !!python/unicode '4.00'
       date: 01/10/2019 21:43:56
     default_cal:
       ph1: 4.0
       ph2: 7.0
-  temperature: 20.01
-  temperatureDefault: 20.01
-  temperatureMax: 50
-  temperatureMin: 10
+  temperature: !!python/unicode '25.01'
 i2c:
   ph_channels:
     1: 64
@@ -49,6 +49,9 @@ i2c:
 interface:
   ph_step: 2
   precision: 2
+  temperatureDefault: 21.01
+  temperatureMax: 50
+  temperatureMin: 10
   time: hh:mm
   time_step: 60
 os_integration:

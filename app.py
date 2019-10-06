@@ -48,34 +48,38 @@ def calibrate():
     if request.method == 'POST':
        
         if request.form['cal_button'] == 'cal1':
-            
+            cal1Function()
             print("cal1")
             return "cal1"
         elif request.form['cal_button'] == 'cal2':
             print("cal2")
+            cal2Function()
             return "cal2"
         elif request.form['cal_button'] == 'calibrate':
             print("calibrate")
             now = datetime.now()
             dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-            
+            data['calibration']['ph']['chan'+request.form["channel"]]['a'] =request.form['ph1'] 
+            data['calibration']['ph']['chan'+request.form["channel"]]['b'] = request.form['ph2'] 
             data['calibration']['ph']['chan'+request.form["channel"]]['date']  = dt_string
+            response = [request.form['ph1'] , request.form['ph2'] , dt_string ]
             with open('configuration.yaml', 'w') as f:
                 yaml.dump(data, f)
             return dt_string
         elif request.form['cal_button'] == 'update':
             with open('configuration.yaml') as f:
                 dataTemp = yaml.load(f, Loader=yaml.FullLoader)
-            print(dataTemp['calibration']['temperature'])
-            return str(dataTemp['calibration']['temperature'])
+            print(data['calibration']['ph']['chan'+request.form["channel"]]['Tcal'] )
+         
+            return str(data['calibration']['ph']['chan'+request.form["channel"]]['Tcal'] )
         elif request.form['cal_button'] == 'sendTemp':
-            if float(request.form['temp'] )> float(data['calibration']['temperatureMax']) or float(request.form['temp'] )< float(data['calibration']['temperatureMin'] ):
-                data['calibration']['temperature'] =data['calibration']['temperatureDefault'] 
+            if float(request.form['temp'] )> float(data['interface']['temperatureMax']) or float(request.form['temp'] )< float(data['interface']['temperatureMin'] ):
+                data['calibration']['ph']['chan'+request.form["channel"]]['Tcal'] =data['interface']['temperatureDefault'] 
             else:
-                data['calibration']['temperature'] =  request.form['temp'] 
+                data['calibration']['ph']['chan'+request.form["channel"]]['Tcal']  =  request.form['temp'] 
             with open('configuration.yaml', 'w') as f:
                 yaml.dump(data, f)
-            return  str(data['calibration']['temperature'])
+            return  str(data['calibration']['ph']['chan'+request.form["channel"]]['Tcal'])
             
     elif request.method == 'GET':
         return render_template('calibrate.html',  data=data)
@@ -89,6 +93,14 @@ def get_shell_script_output_using_check_output():
 def terminate_subprocess():
     os.killpg(os.getpgid(process.pid), signal.SIGTERM)
     print("terminate")
+    
+def cal1Function():
+    pass
+
+def cal2Function():
+    pass
+    
+    
 if __name__ == "__main__":
     app.run(threaded=True)
 
