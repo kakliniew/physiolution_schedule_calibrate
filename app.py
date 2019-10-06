@@ -48,23 +48,22 @@ def calibrate():
     if request.method == 'POST':
        
         if request.form['cal_button'] == 'cal1':
-            cal1Function()
-            print("cal1")
+            cal1Function()        
             return "cal1"
-        elif request.form['cal_button'] == 'cal2':
-            print("cal2")
+        elif request.form['cal_button'] == 'cal2':     
             cal2Function()
             return "cal2"
         elif request.form['cal_button'] == 'calibrate':
-            print("calibrate")
+  
             now = datetime.now()
             dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
             data['calibration']['ph']['chan'+request.form["channel"]]['a'] =request.form['ph1'] 
             data['calibration']['ph']['chan'+request.form["channel"]]['b'] = request.form['ph2'] 
             data['calibration']['ph']['chan'+request.form["channel"]]['date']  = dt_string
-            response = [request.form['ph1'] , request.form['ph2'] , dt_string ]
             with open('configuration.yaml', 'w') as f:
                 yaml.dump(data, f)
+                
+            calibrateFunction()
             return dt_string
         elif request.form['cal_button'] == 'update':
             with open('configuration.yaml') as f:
@@ -95,10 +94,13 @@ def terminate_subprocess():
     print("terminate")
     
 def cal1Function():
-    pass
+    print("cal1")
 
 def cal2Function():
-    pass
+    print("cal2")
+    
+def calibrateFunction():
+    print("calibration")
     
     
 if __name__ == "__main__":
