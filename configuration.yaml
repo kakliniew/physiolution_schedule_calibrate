@@ -1,20 +1,20 @@
 calibration:
   ph:
     chan1:
-      Tcal: !!python/unicode '25.00'
+      Tcal: !!python/unicode '21'
       a: !!python/unicode '7.00'
       b: !!python/unicode '4.00'
       date: 06/10/2019 18:17:52
     chan2:
-      Tcal: !!python/unicode '22.00'
+      Tcal: !!python/unicode '23.00'
       a: !!python/unicode '7.00'
       b: !!python/unicode '4.00'
       date: 06/10/2019 15:33:31
     chan3:
-      Tcal: !!python/unicode '23.00'
+      Tcal: !!python/unicode '21.00'
       a: !!python/unicode '7.00'
       b: !!python/unicode '4.00'
-      date: 06/10/2019 15:43:34
+      date: 15/10/2019 22:27:17
     default_cal:
       ph1: 4.0
       ph2: 7.0

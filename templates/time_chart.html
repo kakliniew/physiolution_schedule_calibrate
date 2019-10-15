@@ -8,6 +8,7 @@
     <script src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script>
  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-dragdata@1.0.1/dist/chartjs-plugin-dragData.min.js"></script>
+<script type="text/javascript" src="{{ url_for('static', filename = 'json2.js') }}"></script>
 
 	<style>
 	table {
@@ -113,15 +114,30 @@
 	 var processStop = false;
 	document.getElementById("start").addEventListener("click", function() {
 	    anim(progress, 0, 17000, 10)
-		 var data = {'start_button': 'Start'};
+		
+		values=[];
+		labels=[];
+		
+	    colCount = tbl.rows[0].cells.length;
+	    rowCount = tbl.rows.length;
+		
+		var i;
+		for (i = 1; i < colCount; i++) {
+		  labels.push(tbl.rows[rowCount - 1].cells[i].children[0].value);
+		  values.push(tbl.rows[rowCount - 2].cells[i].children[0].value);
+		} 
+		
+		 var data = {'start_button': 'Start', values:values,labels:labels};
+		 console.log(data);
 		  $.ajax({
-       type : "POST",
-   data: data,
-       //contentType: 'application/json;charset=UTF-8',
+			   type : "POST",
+				data: data,
+			   //contentType: 'application/json;charset=UTF-8',
      
        
-   });
 	});
+	});
+	
 	document.getElementById("stop").addEventListener("click", function() {
 	    stopAnim()
 		var dataStop = {'start_button': 'Stop'};

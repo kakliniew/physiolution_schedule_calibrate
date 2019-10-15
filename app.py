@@ -8,6 +8,7 @@ from subprocess import check_output
 import os
 import signal
 import yaml
+import json
 
 
 with open('configuration.yaml') as f:
@@ -31,6 +32,12 @@ def time_chart():
     if request.method == 'POST':
        
         if request.form['start_button'] == 'Start':
+            
+            receivedValues = request.form.getlist('values[]')
+            receivedLabels = request.form.getlist('labels[]')
+            for item in receivedLabels:
+                print item
+            # the result is a Python dictionary:
             
             get_shell_script_output_using_check_output()
             return "command executed"
