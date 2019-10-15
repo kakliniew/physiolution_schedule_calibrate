@@ -1,7 +1,8 @@
 from flask import Flask
 from flask import render_template
 from flask import request
-from datetime import datetime
+from datetime import datetime, timedelta
+
 import subprocess
 from subprocess import Popen, PIPE
 from subprocess import check_output
@@ -35,8 +36,13 @@ def time_chart():
             
             receivedValues = request.form.getlist('values[]')
             receivedLabels = request.form.getlist('labels[]')
-            for item in receivedLabels:
-                print item
+            for index in xrange(len(receivedLabels)):
+                receivedLabels[index]= datetime.strptime(receivedLabels[index],"%H:%M:%S")
+                receivedLabels[index] = timedelta(hours=receivedLabels[index].hour, minutes = receivedLabels[index].minute, seconds = receivedLabels[index].second)
+                print(receivedLabels[index] .total_seconds())
+            print(receivedLabels[2].total_seconds())
+            #result =  receivedLabels[2]-receivedLabels[1]
+            #print(result)
             # the result is a Python dictionary:
             
             get_shell_script_output_using_check_output()
