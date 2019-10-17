@@ -33,6 +33,8 @@ def time_chart():
     if request.method == 'POST':
        
         if request.form['start_button'] == 'Start':
+            name = "alamakota"
+            description = "descr"
             
             receivedValues = request.form.getlist('values[]')
             receivedLabels = request.form.getlist('labels[]')
@@ -41,9 +43,11 @@ def time_chart():
                 receivedLabels[index] = timedelta(hours=receivedLabels[index].hour, minutes = receivedLabels[index].minute, seconds = receivedLabels[index].second)
                 print(receivedLabels[index] .total_seconds())
             print(receivedLabels[2].total_seconds())
-            #result =  receivedLabels[2]-receivedLabels[1]
-            #print(result)
-            # the result is a Python dictionary:
+            
+            JsonToPrint  = {'name' : name, 'description' : description, 'schedule' : [{'interval': label.total_seconds(), 'pH' : value} for label,value in zip(receivedLabels, receivedValues)]}
+            print(JsonToPrint)
+            with open('schedule.txt', 'w') as outfile:
+                json.dump(JsonToPrint, outfile, indent =4)
             
             get_shell_script_output_using_check_output()
             return "command executed"

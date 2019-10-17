@@ -6,10 +6,10 @@ calibration:
       b: !!python/unicode '4.00'
       date: 06/10/2019 18:17:52
     chan2:
-      Tcal: !!python/unicode '23.00'
-      a: !!python/unicode '7.00'
+      Tcal: !!python/unicode '25.00'
+      a: !!python/unicode '11.00'
       b: !!python/unicode '4.00'
-      date: 06/10/2019 15:33:31
+      date: 17/10/2019 07:46:43
     chan3:
       Tcal: !!python/unicode '21.00'
       a: !!python/unicode '7.00'
