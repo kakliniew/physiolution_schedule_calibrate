@@ -47,17 +47,20 @@ def time_chart():
             JsonToPrint  = {'name' : name, 'description' : description, 'schedule' : [{'interval': label.total_seconds(), 'pH' : value} for label,value in zip(receivedLabels, receivedValues)]}
             print(JsonToPrint)
             with open('schedule.txt', 'w') as outfile:
-                json.dump(JsonToPrint, outfile, indent =4)
-            
+                json.dump(JsonToPrint, outfile, indent =4)         
             get_shell_script_output_using_check_output()
             return "command executed"
         elif request.form['start_button'] == 'Stop':
+           
             terminate_subprocess()
             return "process terminated"
         else:
             pass # unknown
     elif request.method == 'GET':
-        return render_template('time_chart.html', legend=legend)
+        labels, values= getLabelsAndValuesFromJson('schedule.txt')
+        print(labels)
+        print(values)
+        return render_template('time_chart.html', legend=legend, labels = labels, values = values )
 
 @app.route("/calibrate", methods=['POST', 'GET'])
 def calibrate():
@@ -100,6 +103,7 @@ def calibrate():
             returned_value = 5
             return str(returned_value)
     elif request.method == 'GET':
+        
         return render_template('calibrate.html',  data=data)
 
 def get_shell_script_output_using_check_output():
@@ -120,6 +124,19 @@ def cal2Function():
     
 def calibrateFunction():
     print("calibration")
+    
+def getLabelsAndValuesFromJson(filename):
+    with open(filename) as json_file:
+        data = json.load(json_file)
+        receivedValues = [ [value['pH']] for value in data['schedule']]
+        receivedLabels =  [ [label['interval']] for label in data['schedule']]
+        
+        for index in xrange(len(receivedLabels)):
+                #receivedLabels[index]= str(timedelta(seconds=int(receivedLabels[index])))
+               
+                print(receivedLabels[index] )
+                
+        return receivedLabels, receivedValues
     
     
 if __name__ == "__main__":
