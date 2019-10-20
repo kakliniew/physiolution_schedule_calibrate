@@ -38,16 +38,16 @@
   </tr>
   <tr>
     <td>Expected pH</td>
-    <td><input type="text"  value="7.03" size="1" onchange="reloadChart()"/></td>
-	<td><input type="text"  value="8.0005" size="1" onchange="reloadChart()"/></td>
-	<td><input type="text"  value="8.0006" size="1" onchange="reloadChart()"/></td>
+    <td><input type="text"  value="7.03" size="1" onchange="reloadChart()" style="width: 100%;max-width: 50px;"/></td>
+	<td><input type="text"  value="8.0005" size="1" onchange="reloadChart()" style="width: 100%;max-width: 50px;"/></td>
+	<td><input type="text"  value="8.0006" size="1" onchange="reloadChart()" style="width: 100%;max-width: 50px;"/></td>
 
   </tr>
   <tr>
     <td>Time</td>
-	<td><input type="text"  value="00:00" size="1" maxlength="8" onchange="reloadChart()"/></td>
-    <td><input type="text"  value="00:01" size="1" maxlength="8" onchange="reloadChart()"/></td>
-	<td><input type="text"  value="00:02" size="1" maxlength="8" onchange="reloadChart()"/></td>
+	<td><input type="text"  value="00:00" size="1" maxlength="8" onchange="reloadChart()" style="width: 100%;max-width: 50px;"/></td>
+    <td><input type="text"  value="00:01" size="1" maxlength="8" onchange="reloadChart()" style="width: 100%;max-width: 50px;"/></td>
+	<td><input type="text"  value="00:02" size="1" maxlength="8" onchange="reloadChart()" style="width: 100%;max-width: 50px;"/></td>
 	
   </tr>
 </table> 
@@ -238,7 +238,7 @@
          if(trow.index() === 0){
             trow.append("<td>"+iter+"</td>");
          }else{
-             trow.append("<td><input size='1' type='text' onchange='reloadChart()'/></td>");
+             trow.append("<td><input size='1' type='text' onchange='reloadChart()' style='width: 100%;max-width: 50px;'/></td>");
          } 
      });
      iter += 1;

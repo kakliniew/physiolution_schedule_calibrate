@@ -10,7 +10,7 @@ import os
 import signal
 import yaml
 import json
-from functions import get_shell_script_output_using_check_output, terminate_subprocess, cal1Function, cal2Function, calibrateFunction,  getLabelsAndValuesFromJson
+from functions import get_shell_script_output_using_check_output, terminate_subprocess, cal1Function, cal2Function, calibrateFunction,  getLabelsAndValuesFromJson, save_to_json, getTemp, saveDataToConfFromCablibrateButton
 
 
 with open('configuration.yaml') as f:
@@ -37,23 +37,12 @@ def time_chart():
             name = "alamakota"
             description = "descr"
             
-            receivedValues = request.form.getlist('values[]')
-            receivedLabels = request.form.getlist('labels[]')
-            for index in range(len(receivedLabels)):
-                receivedLabels[index]= datetime.strptime(receivedLabels[index],"%H:%M")
-                receivedLabels[index] = timedelta(hours=receivedLabels[index].hour, minutes = receivedLabels[index].minute, seconds = receivedLabels[index].second)
-                print(receivedLabels[index] .total_seconds())
-            print(receivedLabels[2].total_seconds())
-            
-            JsonToPrint  = {'name' : name, 'description' : description, 'schedule' : [{'interval': label.total_seconds(), 'pH' : value} for label,value in zip(receivedLabels, receivedValues)]}
-            print(JsonToPrint)
-            with open('schedule.json', 'w') as outfile:
-                json.dump(JsonToPrint, outfile, indent =4)         
+            save_to_json('schedule.json', name, description, request)
             get_shell_script_output_using_check_output()
             return "command executed"
         elif request.form['start_button'] == 'Stop':
            
-            terminate_subprocess()
+            terminate_subprocess(process)
             return "process terminated"
         else:
             pass # unknown
@@ -75,15 +64,7 @@ def calibrate():
             cal2Function()
             return "cal2"
         elif request.form['cal_button'] == 'calibrate':
-  
-            now = datetime.now()
-            dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-            data['calibration']['ph']['chan'+request.form["channel"]]['a'] =request.form['ph1'] 
-            data['calibration']['ph']['chan'+request.form["channel"]]['b'] = request.form['ph2'] 
-            data['calibration']['ph']['chan'+request.form["channel"]]['date']  = dt_string
-            with open('configuration.yaml', 'w') as f:
-                yaml.dump(data, f)
-                
+            dt_string = saveDataToConfFromCablibrateButton(request, data)
             calibrateFunction()
             return dt_string
         elif request.form['cal_button'] == 'update':
@@ -93,13 +74,7 @@ def calibrate():
          
             return str(data['calibration']['ph']['chan'+request.form["channel"]]['Tcal'] )
         elif request.form['cal_button'] == 'sendTemp':
-            if float(request.form['temp'] )> float(data['interface']['temperatureMax']) or float(request.form['temp'] )< float(data['interface']['temperatureMin'] ):
-                data['calibration']['ph']['chan'+request.form["channel"]]['Tcal'] =data['interface']['temperatureDefault'] 
-            else:
-                data['calibration']['ph']['chan'+request.form["channel"]]['Tcal']  =  request.form['temp'] 
-            with open('configuration.yaml', 'w') as f:
-                yaml.dump(data, f)
-            return  str(data['calibration']['ph']['chan'+request.form["channel"]]['Tcal'])
+           return getTemp(data)
         elif request.form['cal_button'] == 'deviation':
             returned_value = 5
             return str(returned_value)
