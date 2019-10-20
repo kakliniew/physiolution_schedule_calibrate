@@ -10,6 +10,7 @@ import os
 import signal
 import yaml
 import json
+from functions import get_shell_script_output_using_check_output, terminate_subprocess, cal1Function, cal2Function, calibrateFunction,  getLabelsAndValuesFromJson
 
 
 with open('configuration.yaml') as f:
@@ -38,15 +39,15 @@ def time_chart():
             
             receivedValues = request.form.getlist('values[]')
             receivedLabels = request.form.getlist('labels[]')
-            for index in xrange(len(receivedLabels)):
-                receivedLabels[index]= datetime.strptime(receivedLabels[index],"%H:%M:%S")
+            for index in range(len(receivedLabels)):
+                receivedLabels[index]= datetime.strptime(receivedLabels[index],"%H:%M")
                 receivedLabels[index] = timedelta(hours=receivedLabels[index].hour, minutes = receivedLabels[index].minute, seconds = receivedLabels[index].second)
                 print(receivedLabels[index] .total_seconds())
             print(receivedLabels[2].total_seconds())
             
             JsonToPrint  = {'name' : name, 'description' : description, 'schedule' : [{'interval': label.total_seconds(), 'pH' : value} for label,value in zip(receivedLabels, receivedValues)]}
             print(JsonToPrint)
-            with open('schedule.txt', 'w') as outfile:
+            with open('schedule.json', 'w') as outfile:
                 json.dump(JsonToPrint, outfile, indent =4)         
             get_shell_script_output_using_check_output()
             return "command executed"
@@ -57,7 +58,7 @@ def time_chart():
         else:
             pass # unknown
     elif request.method == 'GET':
-        labels, values= getLabelsAndValuesFromJson('schedule.txt')
+        labels, values= getLabelsAndValuesFromJson('schedule.json')
         print(labels)
         print(values)
         return render_template('time_chart.html', legend=legend, labels = labels, values = values )
@@ -106,37 +107,7 @@ def calibrate():
         
         return render_template('calibrate.html',  data=data)
 
-def get_shell_script_output_using_check_output():
-    bashCommand = "ping www.wp.pl"
-    process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
-    output, error= process.communicate()
-    print("excetude")
-    
-def terminate_subprocess():
-    os.killpg(os.getpgid(process.pid), signal.SIGTERM)
-    print("terminate")
-    
-def cal1Function():
-    print("cal1")
 
-def cal2Function():
-    print("cal2")
-    
-def calibrateFunction():
-    print("calibration")
-    
-def getLabelsAndValuesFromJson(filename):
-    with open(filename) as json_file:
-        data = json.load(json_file)
-        receivedValues = [ [value['pH']] for value in data['schedule']]
-        receivedLabels =  [ [label['interval']] for label in data['schedule']]
-        
-        for index in xrange(len(receivedLabels)):
-                #receivedLabels[index]= str(timedelta(seconds=int(receivedLabels[index])))
-               
-                print(receivedLabels[index] )
-                
-        return receivedLabels, receivedValues
     
     
 if __name__ == "__main__":

@@ -1,0 +1,18 @@
+{
+    "name": "alamakota",
+    "description": "descr",
+    "schedule": [
+        {
+            "interval": 0.0,
+            "pH": "7.03"
+        },
+        {
+            "interval": 60.0,
+            "pH": "8.0005"
+        },
+        {
+            "interval": 120.0,
+            "pH": "8.0006"
+        }
+    ]
+}
