@@ -55,17 +55,31 @@ def save_to_json(filename, chartname, chartdescription, request):
     receivedValues = request.form.getlist('values[]')
     receivedLabels = request.form.getlist('labels[]')
     for index in range(len(receivedLabels)):
-        receivedLabels[index]= datetime.strptime(receivedLabels[index],"%H:%M")
-        receivedLabels[index] = timedelta(hours=receivedLabels[index].hour, minutes = receivedLabels[index].minute, seconds = receivedLabels[index].second)
-        print(receivedLabels[index] .total_seconds())
-    print(receivedLabels[2].total_seconds())
+        try: 
+            receivedLabels[index]= datetime.strptime(receivedLabels[index],"%H:%M")
+            receivedLabels[index] = timedelta(hours=receivedLabels[index].hour, minutes = receivedLabels[index].minute, seconds = receivedLabels[index].second)
+            print(receivedLabels[index] .total_seconds())
+        except: 
+            print("Parsing value  " + receivedLabels[index] + " to seconds is not possble")
+            receivedLabels[index] = timedelta(hours=0, minutes = 0, seconds = 0)
+    
     
     JsonToPrint  = {'name' : name, 'description' : description, 'schedule' : [{'interval': label.total_seconds(), 'pH' : value} for label,value in zip(receivedLabels, receivedValues)]}
     print(JsonToPrint)
     with open(filename, 'w') as outfile:
         json.dump(JsonToPrint, outfile, indent =4)      
         
-        
+def saveDataToConfFromCablibrateButton(request, data):
+    now = datetime.now()
+    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    data['calibration']['ph']['chan'+request.form["channel"]]['a'] =request.form['ph1'] 
+    data['calibration']['ph']['chan'+request.form["channel"]]['b'] = request.form['ph2'] 
+    data['calibration']['ph']['chan'+request.form["channel"]]['date']  = dt_string
+    with open('configuration.yaml', 'w') as f:
+        yaml.dump(data, f)
+    return dt_string       
+    
+    
 def getTemp(data):
     if float(request.form['temp'] )> float(data['interface']['temperatureMax']) or float(request.form['temp'] )< float(data['interface']['temperatureMin'] ):
         data['calibration']['ph']['chan'+request.form["channel"]]['Tcal'] =data['interface']['temperatureDefault'] 
