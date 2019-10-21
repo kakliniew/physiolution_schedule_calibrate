@@ -10,14 +10,14 @@ import os
 import signal
 import yaml
 import json
-from functions import get_shell_script_output_using_check_output, terminate_subprocess, cal1Function, cal2Function, calibrateFunction,  getLabelsAndValuesFromJson, save_to_json, getTemp, saveDataToConfFromCablibrateButton
+from functions import get_shell_script_output_using_check_output, terminate_subprocess, cal1Function, cal2Function, calibrateFunction,  getLabelsAndValuesFromJson, save_to_json, getTemp, saveDataToConfFromCablibrateButton, getNumberOfChannels
 
 
 with open('configuration.yaml') as f:
     
     data = yaml.load(f, Loader=yaml.FullLoader)
    
-print(data['calibration']['ph']['default_cal']['ph1'])
+
 
 app = Flask(__name__)
 
@@ -28,7 +28,7 @@ process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
 @app.route("/time_chart", methods=['POST', 'GET'])
 def time_chart():
 
-   
+    numberOfChannels = getNumberOfChannels(data)
     legend = 'pH'
   
     if request.method == 'POST':
@@ -49,8 +49,8 @@ def time_chart():
     elif request.method == 'GET':
         labels, values= getLabelsAndValuesFromJson('schedule.json')
         print(labels)
-        print(values)
-        return render_template('time_chart.html', legend=legend, labels = labels, values = values )
+        print(values[1])
+        return render_template('time_chart.html', legend=legend, labels = labels, values = values, numberOfChannels = numberOfChannels )
 
 @app.route("/calibrate", methods=['POST', 'GET'])
 def calibrate():

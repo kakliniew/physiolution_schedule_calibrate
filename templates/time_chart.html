@@ -20,10 +20,10 @@
 	tr:hover {background-color:#f5f5f5;}
 	</style>
   </head>
-  <body>
+  <body onload="onstart()">
     <h1>pH #1</h1>
     <!-- bar chart canvas element -->
-    <div class="chart-container" style="position: relative; height:40vh; width:90vw">
+    <div id= "divchart" class="chart-container" style="position: relative; height:40vh; width:90vw">
     <canvas id="myChart" width="1800" height="400"></canvas>
    
     <p id="pointSelected">Point selected:</p>
@@ -31,23 +31,17 @@
 	 <table id="tblData" style="width:100%">
    <tr>
     <td>Index</td>
-    <td>1</td>
-	<td>2</td>
-	<td>3</td>
+    
 	
   </tr>
   <tr>
     <td>Expected pH</td>
-    <td><input type="text"  value="7.03" size="1" onchange="reloadChart()" style="width: 100%;max-width: 50px;"/></td>
-	<td><input type="text"  value="8.0005" size="1" onchange="reloadChart()" style="width: 100%;max-width: 50px;"/></td>
-	<td><input type="text"  value="8.0006" size="1" onchange="reloadChart()" style="width: 100%;max-width: 50px;"/></td>
+    
 
   </tr>
   <tr>
     <td>Time</td>
-	<td><input type="text"  value="00:00" size="1" maxlength="8" onchange="reloadChart()" style="width: 100%;max-width: 50px;"/></td>
-    <td><input type="text"  value="00:01" size="1" maxlength="8" onchange="reloadChart()" style="width: 100%;max-width: 50px;"/></td>
-	<td><input type="text"  value="00:02" size="1" maxlength="8" onchange="reloadChart()" style="width: 100%;max-width: 50px;"/></td>
+	
 	
   </tr>
 </table> 
@@ -57,16 +51,17 @@
 	<input id="stop" type="submit" name="stop_button" value="Stop">
  </div>
 
+
     <script>
       // Global parameters:
       // do not resize the chart canvas when its container does (keep at 600x400px)
       Chart.defaults.global.responsive = true;
 	var tbl = document.getElementById("tblData");
-      var timeFormat = 'mm:ss';
+      var timeFormat = 'hh:mm';
       var colCount = tbl.rows[0].cells.length;
 	  var rowCount = tbl.rows.length;
-      function newDateString( minutes, seconds) {
-		return moment().minute(minutes).second(seconds).format(timeFormat);
+      function newDateString( hours, minutes) {
+		return moment().hour(hours).minute(minutes).format(timeFormat);
 	  }
 	
 	var values=[];
@@ -229,7 +224,7 @@
 		processStop=true;
 	  } 
 	  
-   var iter = 4;
+   var iter = 1;
 	
 	function Add_value(){
 	
@@ -263,6 +258,48 @@
 		myChart.update();
   }
 		
+	function create_channels()
+	{
+		var div = document.getElementById('divchart');
+	   for(var i=0;i< {{numberOfChannels}} ;i++){
+
+			console.log({{numberOfChannels}});
+
+			var node = document.createElement('div');        
+			node.innerHTML = '<input type="checkbox" id="check' + i + '" name="check' + i + '"><label for="check' + i + '">'+ 'channel'+i +'</label>';  
+			div.appendChild(node);
+		}
+	
+	}
+	
+	function load_chart_from_file()
+	{
+		var i =0;
+		values = {{values|safe}};
+		labels = {{labels|safe}};
+		console.log(labels[0].toString());
+		for(var label in labels)
+		{
+			console.log(label.toString());
+			Add_value();
+			colCount = tbl.rows[0].cells.length;
+			rowCount = tbl.rows.length;
+			 tbl.rows[rowCount - 1].cells[i+1].children[0].value= labels[i].toString() ;
+			 tbl.rows[rowCount - 2].cells[i+1].children[0].value= values[i];
+			i++;
+		}
+		
+	
+	}
+	
+	function onstart()
+	{
+		create_channels();
+		load_chart_from_file();
+		reloadChart();
+	}
+	
+	
      
     </script>
 	

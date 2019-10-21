@@ -2,7 +2,8 @@ from flask import Flask
 from flask import render_template
 from flask import request
 from datetime import datetime, timedelta
-
+from time import strftime
+from time import gmtime
 import subprocess
 from subprocess import Popen, PIPE
 from subprocess import check_output
@@ -38,9 +39,9 @@ def getLabelsAndValuesFromJson(filename):
                 receivedValues = [ [value['pH']] for value in data['schedule']]
                 receivedLabels =  [ [label['interval']] for label in data['schedule']]
                 
-                #for index in range(len(receivedLabels)):
-                        #receivedLabels[index]= str(timedelta(seconds=int(receivedLabels[index])))
-                
+                for index in range(len(receivedLabels)):
+                    receivedLabels[index]= str(strftime("%H:%M",gmtime(receivedLabels[index][0])));
+                    print(receivedLabels[index])
         except: 
              receivedValues = []
              receivedLabels = []
@@ -78,7 +79,9 @@ def saveDataToConfFromCablibrateButton(request, data):
     with open('configuration.yaml', 'w') as f:
         yaml.dump(data, f)
     return dt_string       
-    
+
+def getNumberOfChannels(data):
+    return (len(data['calibration']['ph']) - 1)
     
 def getTemp(data):
     if float(request.form['temp'] )> float(data['interface']['temperatureMax']) or float(request.form['temp'] )< float(data['interface']['temperatureMin'] ):
