@@ -10,57 +10,59 @@ import os
 import signal
 import yaml
 import json
-from functions import get_shell_script_output_using_check_output, terminate_subprocess, cal1Function, cal2Function, calibrateFunction,  getLabelsAndValuesFromJson, save_to_json, getTemp, saveDataToConfFromCablibrateButton, getNumberOfChannels
-
+from functions import get_shell_script_output_using_check_output, terminate_subprocess, cal1Function, cal2Function, \
+    calibrateFunction, getLabelsAndValuesFromJson, save_to_json, getTemp, saveDataToConfFromCablibrateButton, \
+    getNumberOfChannels, loadSchedule
 
 with open('configuration.yaml') as f:
-    
     data = yaml.load(f, Loader=yaml.FullLoader)
-   
-
 
 app = Flask(__name__)
 
-bashCommand ="mkdir -p kar"
+bashCommand = "mkdir -p kar"
 process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
 
 
-@app.route("/time_chart", methods=['POST', 'GET'])
+@app.route("/time_chart", methods=['GET'])
 def time_chart():
-
     numberOfChannels = getNumberOfChannels(data)
     legend = 'pH'
-  
-    if request.method == 'POST':
-       
-        if request.form['start_button'] == 'Start':
-            name = "alamakota"
-            description = "descr"
-            
-            save_to_json('schedule.json', name, description, request)
-            get_shell_script_output_using_check_output()
-            return "command executed"
-        elif request.form['start_button'] == 'Stop':
-           
-            terminate_subprocess(process)
-            return "process terminated"
-        else:
-            pass # unknown
-    elif request.method == 'GET':
-        labels, values= getLabelsAndValuesFromJson('schedule.json')
-        print(labels)
-        print(values[1])
-        return render_template('time_chart.html', legend=legend, labels = labels, values = values, numberOfChannels = numberOfChannels )
+
+    # labels, values = getLabelsAndValuesFromJson('schedule.json')
+    # print(labels)
+    # print(values[1])
+    return render_template('time_chart.html', legend=legend, numberOfChannels=numberOfChannels)
+
+
+@app.route("/schedule", methods=["GET"])
+def getSchedule():
+    return {"schedule": loadSchedule("schedule.json")}
+
+
+@app.route("/start_button", methods=["POST"])
+def startButton():
+    name = "alamakota"
+    description = "descr"
+
+    save_to_json('schedule.json', name, description, request)
+    get_shell_script_output_using_check_output()
+    return "command executed"
+
+
+@app.route("/stopButton", methods=["POST"])
+def stopButton():
+    terminate_subprocess(process)
+    return "process terminated"
+
 
 @app.route("/calibrate", methods=['POST', 'GET'])
 def calibrate():
-  
     if request.method == 'POST':
-       
+
         if request.form['cal_button'] == 'cal1':
-            cal1Function()        
+            cal1Function()
             return "cal1"
-        elif request.form['cal_button'] == 'cal2':     
+        elif request.form['cal_button'] == 'cal2':
             cal2Function()
             return "cal2"
         elif request.form['cal_button'] == 'calibrate':
@@ -70,21 +72,18 @@ def calibrate():
         elif request.form['cal_button'] == 'update':
             with open('configuration.yaml') as f:
                 dataTemp = yaml.load(f, Loader=yaml.FullLoader)
-            print(data['calibration']['ph']['chan'+request.form["channel"]]['Tcal'] )
-         
-            return str(data['calibration']['ph']['chan'+request.form["channel"]]['Tcal'] )
+            print(data['calibration']['ph']['chan' + request.form["channel"]]['Tcal'])
+
+            return str(data['calibration']['ph']['chan' + request.form["channel"]]['Tcal'])
         elif request.form['cal_button'] == 'sendTemp':
-           return getTemp(data)
+            return getTemp(data)
         elif request.form['cal_button'] == 'deviation':
             returned_value = 5
             return str(returned_value)
     elif request.method == 'GET':
-        
-        return render_template('calibrate.html',  data=data)
+
+        return render_template('calibrate.html', data=data)
 
 
-    
-    
 if __name__ == "__main__":
     app.run(threaded=True)
-

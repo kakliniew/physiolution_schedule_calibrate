@@ -3,16 +3,24 @@
     "description": "descr",
     "schedule": [
         {
-            "interval": 0.0,
-            "pH": "7.03"
+            "interval": 0,
+            "pH": "2.43"
         },
         {
-            "interval": 60.0,
-            "pH": "8.0005"
+            "interval": 1181,
+            "pH": "3.65"
         },
         {
-            "interval": 120.0,
-            "pH": "8.0006"
+            "interval": 1434,
+            "pH": "6.86"
+        },
+        {
+            "interval": 1500,
+            "pH": "13"
+        },
+        {
+            "interval": 1740,
+            "pH": "3"
         }
     ]
 }

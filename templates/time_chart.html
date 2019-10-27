@@ -1,82 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
+<head>
+    <meta charset="utf-8"/>
     <title>pH manager</title>
     <!-- import plugin script -->
-<script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script>
- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-dragdata@1.0.1/dist/chartjs-plugin-dragData.min.js"></script>
-<script type="text/javascript" src="{{ url_for('static', filename = 'json2.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-dragdata@1.0.1/dist/chartjs-plugin-dragData.min.js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename = 'json2.js') }}"></script>
 
-	<style>
-	table {
-	  border: 1px solid black;
-	}
-		th, td {
-	  border-bottom: 1px solid #ddd;
-	}
-	tr:hover {background-color:#f5f5f5;}
-	</style>
-  </head>
-  <body onload="onstart()">
-    <h1>pH #1</h1>
-    <!-- bar chart canvas element -->
-    <div id= "divchart" class="chart-container" style="position: relative; height:40vh; width:90vw">
+    <style>
+        table {
+            border: 1px solid black;
+        }
+
+        th, td {
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+<body onload="onStart()">
+<h1>pH #1</h1>
+<!-- bar chart canvas element -->
+<div id="divchart" class="chart-container" style="position: relative; height:40vh; width:90vw">
     <canvas id="myChart" width="1800" height="400"></canvas>
-   
+
     <p id="pointSelected">Point selected:</p>
-	
-	 <table id="tblData" style="width:100%">
-   <tr>
-    <td>Index</td>
-    
-	
-  </tr>
-  <tr>
-    <td>Expected pH</td>
-    
 
-  </tr>
-  <tr>
-    <td>Time</td>
-	
-	
-  </tr>
-</table> 
-   <input id="add" type="submit" name="add_button" value="Add step">
-	<progress id="animationProgress" max="1" value="0" style="width: 100%"></progress>
-	<input id="start" type="submit" name="start_button" value="Start">
-	<input id="stop" type="submit" name="stop_button" value="Stop">
- </div>
+    <table id="tblData" style="width:100%">
+        <tr>
+            <td>Index</td>
 
 
-    <script>
-      // Global parameters:
-      // do not resize the chart canvas when its container does (keep at 600x400px)
-      Chart.defaults.global.responsive = true;
-	var tbl = document.getElementById("tblData");
-      var timeFormat = 'hh:mm';
-      var colCount = tbl.rows[0].cells.length;
-	  var rowCount = tbl.rows.length;
-      function newDateString( hours, minutes) {
-		return moment().hour(hours).minute(minutes).format(timeFormat);
-	  }
-	
-	var values=[];
-	var labels=[];
-	
-	var i;
-	for (i = 1; i < colCount; i++) {
-	  labels.push(tbl.rows[rowCount - 1].cells[i].children[0].value);
-	  values.push(tbl.rows[rowCount - 2].cells[i].children[0].value);
-	} 
-	
-      // define the chart data
-      var chartData = {
-        labels : labels,
-        datasets : [{
+        </tr>
+        <tr>
+            <td>Expected pH</td>
+
+
+        </tr>
+        <tr>
+            <td>Time</td>
+
+
+        </tr>
+    </table>
+    <input id="add" type="submit" name="add_button" value="Add step">
+    <progress id="animationProgress" max="1" value="0" style="width: 100%"></progress>
+    <input id="start" type="submit" name="start_button" value="Start">
+    <input id="stop" type="submit" name="stop_button" value="Stop">
+</div>
+
+
+<script>
+    // Global parameters:
+    // do not resize the chart canvas when its container does (keep at 600x400px)
+    Chart.defaults.global.responsive = true;
+    var tbl = document.getElementById("tblData");
+    var timeFormat = 'HH:mm';
+    var colCount = tbl.rows[0].cells.length;
+    var rowCount = tbl.rows.length;
+
+    function timeFromMinutes(minutes) {
+        return newDateString(Math.floor(minutes / 60), minutes % 60);
+    }
+
+    function newDateString(hours, minutes) {
+        {#return moment().hour(hours).minute(minutes).format(timeFormat);#}
+        return hours.toString().padStart(2, "0") + ":" + minutes.toString().padStart(2, "0");
+    }
+
+    function parseTimeToMinutes(value) {
+        let split = value.split(":");
+        return (parseInt(split[0]) * 60) + parseInt(split[1]);
+    }
+
+    // define the chart data
+    var chartData = {
+        {#labels: [],#}
+        datasets: [{
             label: '{{ legend }}',
             fill: true,
             lineTension: 0.1,
@@ -95,214 +101,204 @@
             pointHoverBorderWidth: 2,
             pointRadius: 1,
             pointHitRadius: 10,
-            data : values,
+            data: parseData(),
             spanGaps: false,
-	    steppedLine: 'middle',
-	    responsive: true
+            steppedLine: 'middle',
+            responsive: true
         }]
-      }
+    };
 
-      // get chart canvas
-      var holder = document.getElementById("myChart");
-      var ctx = document.getElementById("myChart").getContext("2d");
-      var progress = document.getElementById('animationProgress');
-	 var processStop = false;
-	document.getElementById("start").addEventListener("click", function() {
-	    anim(progress, 0, 17000, 10)
-		
-		values=[];
-		labels=[];
-		
-	    colCount = tbl.rows[0].cells.length;
-	    rowCount = tbl.rows.length;
-		
-		var i;
-		for (i = 1; i < colCount; i++) {
-		  labels.push(tbl.rows[rowCount - 1].cells[i].children[0].value);
-		  values.push(tbl.rows[rowCount - 2].cells[i].children[0].value);
-		} 
-		
-		 var data = {'start_button': 'Start', values:values,labels:labels};
-		 console.log(data);
-		  $.ajax({
-			   type : "POST",
-				data: data,
-			   //contentType: 'application/json;charset=UTF-8',
-     
-       
-	});
-	});
-	
-	document.getElementById("stop").addEventListener("click", function() {
-	    stopAnim()
-		var dataStop = {'start_button': 'Stop'};
-		 $.ajax({
-       type : "POST",
-   data: dataStop,
-       //contentType: 'application/json;charset=UTF-8',
-     
+    // get chart canvas
+    var holder = document.getElementById("myChart");
+    var ctx = document.getElementById("myChart").getContext("2d");
+    var progress = document.getElementById('animationProgress');
+    var processStop = false;
+    document.getElementById("start").addEventListener("click", function () {
+        anim(progress, 0, 17000, 10);
 
-   });
-	}); 
-	document.getElementById("add").addEventListener("click", function() {
-	    Add_value()
-		reloadChart()
-	}); 
-	
+        $.ajax({
+            url: "/start_button",
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json",
+            data: JSON.stringify({schedule: parseData()})
+        });
+    });
 
-	
-     
+    document.getElementById("stop").addEventListener("click", function () {
+        stopAnimation();
+        $.ajax({
+            url: "/stop_button",
+            type: "POST"
+        });
+    });
+    document.getElementById("add").addEventListener("click", function () {
+        addValue();
+        reloadChart()
+    });
 
-      // create the chart using the chart canvas
-      var myChart = new Chart(ctx, {
+
+    // create the chart using the chart canvas
+    var myChart = new Chart(ctx, {
         type: 'line',
         data: chartData,
-	
-	
         options: {
-	 dragData: true,
-	 dragDataRound: 2,
-	 onDrag: function (e, datasetIndex, index, value) {
-      console.log(value);
-	  tbl.rows[rowCount - 2].cells[index+1].children[0].value=value;
-    },
-	 scales: {
-		yAxes:[{
-			ticks:{
-				max: 14,
-				min: 0,
-				stepSize: 1.0
-				}}]},
-	
-          tooltips: {
-            enabled: true,
-            mode: 'single',
-            callbacks: {
-              label: function(tooltipItems, data) {
-                       firstPointCtx = "First Point Selected: ";
-                       return tooltipItems.yLabel + ' pH';
-                     }
+            dragData: true,
+            dragX: true,
+            dragDataRound: 2,
+            onDrag: function (e, datasetIndex, index, value) {
+                console.log(value);
+                tbl.rows[rowCount - 1].cells[index + 1].children[0].value = timeFromMinutes(Math.floor(value.x));
+                tbl.rows[rowCount - 2].cells[index + 1].children[0].value = value.y;
+            },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        max: 14,
+                        min: 0,
+                        stepSize: 1.0
+                    }
+                }],
+                xAxes: [{
+                    type: "linear",
+                    ticks: {
+                        precision: 0,
+                        beginAtZero: false,
+                        userCallback: function (label, index, labels) {
+                            if (Math.floor(label) === label) {
+                                return timeFromMinutes(label);
+                            }
+                        }
+                    }
+                }]
+            },
+            tooltips: {
+                enabled: true,
+                mode: 'single',
+                callbacks: {
+                    title: function (tooltipItems, data) {
+                        return timeFromMinutes(tooltipItems[0].xLabel);
+                    },
+                    label: function (tooltipItems, data) {
+                        firstPointCtx = "First Point Selected: ";
+                        return tooltipItems.yLabel + ' pH';
+                    }
+                }
+
+            }
+        }
+    });
+    // get the text element below the chart
+    var pointSelected = document.getElementById("pointSelected");
+
+    // create a callback function for updating the selected index on the chart
+    holder.onclick = function (evt) {
+        var activePoint = myChart.getElementAtEvent(evt);
+        if (activePoint.length > 0) {
+            console.log(activePoint);
+            console.log('x:' + activePoint[0]._view.x);
+            console.log('maxWidth: ' + activePoint[0]._xScale.maxWidth);
+            console.log('y: ' + activePoint[0]._view.y);
+            console.log('index: ' + activePoint[0]._index);
+            pointSelected.innerHTML = 'Point selected... index: ' + (activePoint[0]._index + 1);
+        }
+    };
+
+    function anim(element, time, maxTime, offset) {
+        if (processStop === false) {
+            element.value = time / maxTime;
+            if (element.value >= 1) {
+                return;
             }
 
-          },
-	
-	
+            window.setTimeout(function () {
+                anim(element, time + offset, maxTime, offset);
+            }, Math.min(maxTime - time, offset));
+        } else processStop = false;
+    }
+
+    function stopAnimation() {
+        processStop = true;
+    }
+
+    var iter = 1;
+
+    function addValue() {
+
+        $("#tblData").find('tr').each(function () {
+            var trow = $(this);
+            if (trow.index() === 0) {
+                trow.append("<td>" + iter + "</td>");
+            } else {
+                var input = $("<input size='1' type='text' style='width: 100%;max-width: 50px;'>");
+                input.val(trow.index() === 1 ? "0" : "00:00");
+                input.on("change", function () {
+                    reloadChart();
+                });
+                trow.append($("<td>").append(input));
+            }
+        });
+        iter += 1;
+    }
+
+    function reloadChart() {
+        myChart.data.datasets[0].data = parseData();
+        myChart.update();
+    }
+
+    function createChannels() {
+        var div = document.getElementById('divchart');
+        for (var i = 0; i < {{numberOfChannels}}; i++) {
+
+            console.log({{numberOfChannels}});
+
+            var node = document.createElement('div');
+            node.innerHTML = '<input type="checkbox" id="check' + i + '" name="check' + i + '"><label for="check' + i + '">' + 'channel' + i + '</label>';
+            div.appendChild(node);
         }
-      });
-  // get the text element below the chart
-      var pointSelected = document.getElementById("pointSelected");
 
-      // create a callback function for updating the selected index on the chart
-      holder.onclick = function(evt){
-        var activePoint = myChart.getElementAtEvent(evt);
-        console.log(activePoint);
-        console.log('x:' + activePoint[0]._view.x);
-        console.log('maxWidth: ' + activePoint[0]._xScale.maxWidth);
-        console.log('y: ' + activePoint[0]._view.y);
-        console.log('index: ' + activePoint[0]._index);
-        pointSelected.innerHTML = 'Point selected... index: ' + (activePoint[0]._index +1);
-      };
-	  
-	  function anim(element, time, maxTime, offset)
-	  {
-		 if( processStop == false) {
-	      element.value = time / maxTime;
-		  if (element.value >= 1)
-		  {
-		      return;
-		  }
-	
-	      window.setTimeout(function() {
-		      anim(element, time + offset, maxTime, offset);
-		  }, Math.min(maxTime - time, offset));
-		  }
-		  else processStop = false;
-	  }
-	  
-	 function stopAnim()
-	  {
-		processStop=true;
-	  } 
-	  
-   var iter = 1;
-	
-	function Add_value(){
-	
-	 $("#tblData").find('tr').each(function(){
-      var trow = $(this);   
-         if(trow.index() === 0){
-            trow.append("<td>"+iter+"</td>");
-         }else{
-             trow.append("<td><input size='1' type='text' onchange='reloadChart()' style='width: 100%;max-width: 50px;'/></td>");
-         } 
-     });
-     iter += 1;
-		 
-			
-	}; 
-	
-	function reloadChart() {
-		values=[];
-		labels=[];
-		
-	    colCount = tbl.rows[0].cells.length;
-	    rowCount = tbl.rows.length;
-		
-		var i;
-		for (i = 1; i < colCount; i++) {
-		  labels.push(tbl.rows[rowCount - 1].cells[i].children[0].value);
-		  values.push(tbl.rows[rowCount - 2].cells[i].children[0].value);
-		} 
-		myChart.data.labels=labels;
-		myChart.data.datasets[0].data=values;
-		myChart.update();
-  }
-		
-	function create_channels()
-	{
-		var div = document.getElementById('divchart');
-	   for(var i=0;i< {{numberOfChannels}} ;i++){
+    }
 
-			console.log({{numberOfChannels}});
+    function loadChartFromFile() {
+        $.get("/schedule", function (data) {
+            var schedule = data.schedule.map(x => {
+                return {x: x.interval, y: x.pH};
+            });
+            for (var i = 0; i < schedule.length; i++) {
+                addValue();
+                colCount = tbl.rows[0].cells.length;
+                rowCount = tbl.rows.length;
+                tbl.rows[rowCount - 1].cells[i + 1].children[0].value = timeFromMinutes(schedule[i].x);
+                tbl.rows[rowCount - 2].cells[i + 1].children[0].value = schedule[i].y;
+            }
+            reloadChart();
+        });
+    }
 
-			var node = document.createElement('div');        
-			node.innerHTML = '<input type="checkbox" id="check' + i + '" name="check' + i + '"><label for="check' + i + '">'+ 'channel'+i +'</label>';  
-			div.appendChild(node);
-		}
-	
-	}
-	
-	function load_chart_from_file()
-	{
-		var i =0;
-		values = {{values|safe}};
-		labels = {{labels|safe}};
-		console.log(labels[0].toString());
-		for(var label in labels)
-		{
-			console.log(label.toString());
-			Add_value();
-			colCount = tbl.rows[0].cells.length;
-			rowCount = tbl.rows.length;
-			 tbl.rows[rowCount - 1].cells[i+1].children[0].value= labels[i].toString() ;
-			 tbl.rows[rowCount - 2].cells[i+1].children[0].value= values[i];
-			i++;
-		}
-		
-	
-	}
-	
-	function onstart()
-	{
-		create_channels();
-		load_chart_from_file();
-		reloadChart();
-	}
-	
-	
-     
-    </script>
-	
-  </body>
+    function onStart() {
+        createChannels();
+        loadChartFromFile();
+    }
+
+    function parseData() {
+        var schedule = [];
+
+        colCount = tbl.rows[0].cells.length;
+        rowCount = tbl.rows.length;
+
+        var i;
+        for (i = 1; i < colCount; i++) {
+            schedule.push({
+                x: parseTimeToMinutes(tbl.rows[rowCount - 1].cells[i].children[0].value),
+                y: tbl.rows[rowCount - 2].cells[i].children[0].value
+            });
+        }
+
+        return schedule;
+    }
+
+</script>
+
+</body>
 </html>
 
