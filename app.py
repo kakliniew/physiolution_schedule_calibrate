@@ -38,6 +38,22 @@ def time_chart():
 def getSchedule():
     return {"schedule": loadSchedule("schedule.json")}
 
+@app.route("/schedules", methods=["GET"])
+def getListOfSchedules():
+    path = './schedules/'
+
+    files = ""
+    # r=root, d=directories, f = files
+    for r, d, f in os.walk(path):
+        for file in f:      
+            files=files+ str(file) +" "
+    print(str(files))
+    return str(files)
+    
+@app.route("/getTemplateSchedule", methods=["GET"])
+def getTemplateSchedule(): 
+    return {"schedule": loadSchedule("./schedules/"+request.args.get("templateName"))}
+
 
 @app.route("/start_button", methods=["POST"])
 def startButton():
@@ -47,7 +63,21 @@ def startButton():
     save_to_json('schedule.json', name, description, request)
     get_shell_script_output_using_check_output()
     return "command executed"
+    
+@app.route("/deleteTemplate", methods=["GET"])
+def deleteTemplate():
+    os.remove("./schedules/"+str(request.args.get("templateName")))
+    return "worked"
 
+@app.route("/saveTemplate", methods=["POST"])
+def saveTemplate():
+    name = "alamakota"
+    description = "descr"
+    now = datetime.now()
+    dt_string = now.strftime("%d-%m-%Y-%H-%M-%S")
+    save_to_json('./schedules/schedule_'+dt_string+'.json', name, description, request)
+
+    return "template_saved"
 
 @app.route("/stopButton", methods=["POST"])
 def stopButton():
