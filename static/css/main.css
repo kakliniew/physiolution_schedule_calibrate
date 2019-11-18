@@ -1,0 +1,48 @@
+body {
+    background-color: #161719;
+    color: #d8d9da;
+}
+
+select {
+    background-color: #161719;
+    color: #d8d9da;
+}
+
+.chart-container {
+    position: relative;
+}
+
+.panel-container {
+    background-color: #212124;
+    border: 1px solid #141414;
+    padding: 10px 20px;
+}
+
+.parent-table {
+    width: 100%;
+    overflow-x: auto;
+    margin: 10px 0;
+}
+
+#animationProgress {
+    margin: 10px 0;
+}
+
+table {
+    border: 1px solid #d8d9da;
+}
+
+th, td {
+    border-bottom: 1px solid #ddd;
+}
+
+tr:hover {
+    background-color: #161719;
+}
+
+input.time-input {
+    color: inherit;
+    width: 50px;
+    background: none;
+    border: 0;
+}

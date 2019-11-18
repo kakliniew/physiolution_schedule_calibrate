@@ -11,13 +11,54 @@ import os
 import signal
 import yaml
 import json
+import time
 
+process = None
 
-def get_shell_script_output_using_check_output():
-    bashCommand = "ping www.wp.pl"
-    process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
-    output, error = process.communicate()
-    print("excetude")
+def isProcessAlive():
+    global process
+
+    return process != None and process["process"].poll() is None
+
+def getProcess():
+    global process
+
+    if process is not None:
+        process["data"]["start"] = time.time() - process["data"]["startTime"]
+        return process["data"]
+    return None
+
+def waitForProcess():
+    global process
+
+    if isProcessAlive():
+        output, err = process["process"].communicate()
+
+def get_shell_script_output_using_check_output(schedule):
+    global process
+
+    endTime = 0
+    for s in schedule:
+        endTime += s["x"]
+
+    # bashCommand = "ping www.wp.pl"
+    bashCommand = "sleep 10"
+    if not isProcessAlive():
+        process = {
+            "process": subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE),
+            "data": {
+                "startTime": time.time(),
+                "start": 0,
+                "time": endTime
+            }
+        }
+    print("executed")
+
+def killProcess():
+    global process
+
+    if isProcessAlive():
+        process["process"].kill()
 
 
 def terminate_subprocess(process):
@@ -65,11 +106,9 @@ def loadSchedule(filename):
         return {}
 
 
-def save_to_json(filename, chartname, chartdescription, request):
+def save_to_json(filename, chartname, chartdescription, schedule):
     name = chartname
     description = chartdescription
-
-    schedule = request.get_json()["schedule"]
 
     JsonToPrint = {'name': name, 'description': description,
                    'schedule': [{'interval': data["x"], "pH": data["y"]} for data in schedule]}

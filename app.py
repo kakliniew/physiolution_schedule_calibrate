@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask import render_template
 from flask import request
 from datetime import datetime, timedelta
@@ -12,25 +12,18 @@ import yaml
 import json
 from functions import get_shell_script_output_using_check_output, terminate_subprocess, cal1Function, cal2Function, \
     calibrateFunction, getLabelsAndValuesFromJson, save_to_json, getTemp, saveDataToConfFromCablibrateButton, \
-    getNumberOfChannels, loadSchedule
+    getNumberOfChannels, loadSchedule, isProcessAlive, waitForProcess, killProcess, getProcess
 
 with open('configuration.yaml') as f:
     data = yaml.load(f, Loader=yaml.FullLoader)
 
 app = Flask(__name__)
 
-bashCommand = "mkdir -p kar"
-process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
-
-
 @app.route("/time_chart", methods=['GET'])
 def time_chart():
     numberOfChannels = getNumberOfChannels(data)
     legend = 'pH'
 
-    # labels, values = getLabelsAndValuesFromJson('schedule.json')
-    # print(labels)
-    # print(values[1])
     return render_template('time_chart.html', legend=legend, numberOfChannels=numberOfChannels)
 
 
@@ -42,13 +35,10 @@ def getSchedule():
 def getListOfSchedules():
     path = './schedules/'
 
-    files = ""
-    # r=root, d=directories, f = files
+    files = []
     for r, d, f in os.walk(path):
-        for file in f:      
-            files=files+ str(file) +" "
-    print(str(files))
-    return str(files)
+        files.extend(f)
+    return jsonify(files)
     
 @app.route("/getTemplateSchedule", methods=["GET"])
 def getTemplateSchedule(): 
@@ -57,12 +47,22 @@ def getTemplateSchedule():
 
 @app.route("/start_button", methods=["POST"])
 def startButton():
-    name = "alamakota"
-    description = "descr"
+    name = "last_schedule"
+    description = "last run schedule for one of channels"
 
-    save_to_json('schedule.json', name, description, request)
-    get_shell_script_output_using_check_output()
-    return "command executed"
+    schedule = request.get_json()["schedule"]
+    save_to_json('schedule.json', name, description, schedule)
+    get_shell_script_output_using_check_output(schedule)
+    return {"alive": isProcessAlive(), "process": getProcess()}
+
+@app.route("/process_alive", methods=["GET"])
+def processAlive():
+    return {"alive": isProcessAlive(), "process": getProcess()}
+
+@app.route("/wait_process", methods=["GET"])
+def waitProcess():
+    waitForProcess()
+    return "OK"
     
 @app.route("/deleteTemplate", methods=["GET"])
 def deleteTemplate():
@@ -71,18 +71,23 @@ def deleteTemplate():
 
 @app.route("/saveTemplate", methods=["POST"])
 def saveTemplate():
-    name = "alamakota"
-    description = "descr"
-    now = datetime.now()
-    dt_string = now.strftime("%d-%m-%Y-%H-%M-%S")
-    save_to_json('./schedules/schedule_'+dt_string+'.json', name, description, request)
+    # now = datetime.now()
+    # dt_string = now.strftime("%d-%m-%Y-%H-%M-%S")
+
+    name = request.get_json()["name"]
+    description = request.get_json()["description"]
+    schedule = request.get_json()["schedule"]
+
+    # save_to_json('./schedules/schedule_'+dt_string+'.json', name, description, schedule)
+    save_to_json('./schedules/' + name + '.json', name, description, schedule)
 
     return "template_saved"
 
-@app.route("/stopButton", methods=["POST"])
+@app.route("/stop_button", methods=["POST"])
 def stopButton():
-    terminate_subprocess(process)
-    return "process terminated"
+    # terminate_subprocess(process)
+    killProcess()
+    return "OK"
 
 
 @app.route("/calibrate", methods=['POST', 'GET'])
