@@ -47,16 +47,21 @@
 
 
     <div class="line">
-        <div class="buttoncal"><label><input type="checkbox" id="checkboxTemp" checked onclick="checkboxTempchange();">Temperature</label>
+        <div class="buttoncal">
+            <label>
+                <input type="checkbox" id="checkboxTemp" checked onclick="checkboxTempchange();">Temperature
+            </label>
         </div>
     </div>
     <div class="line">
-
-        <div class="buttoncal"><input type="text" id="temp" value="0" size="1" onchange="sendTemp()"/></div>
+        <div class="buttoncal">
+            <input type="text" id="temp" value="0" size="1" onchange="sendTemp()"/>
+        </div>
     </div>
     <div class="line">
-        <div class="buttoncal"><input id="temp_button" type="submit" name="temp_button" value="Update"
-                                      style="width: 45%; height: 100%" onclick="updateTemp()"></div>
+        <div class="buttoncal">
+            <button id="temp_button" onclick="updateTemp()">Update</button>
+        </div>
 
     </div>
     <div class="line">
@@ -76,16 +81,15 @@
 
     <div class="line">
         <div class="buttoncal"><input id="cal1_button" type="submit" name="cal1_button" value="CAL1"
-                                      style="width: 45%; height: 100%" onclick="enableButtonFromCal1()"></div>
+                                      onclick="enableButtonFromCal1()"></div>
         <div class="buttoncal"><input id="cal2_button" type="submit" name="cal2_button" value="CAL2"
-                                      style="width: 45%; height: 100%" onclick="enableButtonFromCal2()"></div>
+                                      onclick="enableButtonFromCal2()"></div>
 
 
     </div>
 
     <div class="line">
-        <input id="calibrate_button" type="submit" name="cali_button" value="CALIBRATE" style="width: 44%; height: 100%"
-               disabled>
+        <button id="calibrate_button" disabled>CALIBRATE</button>
 
 
     </div>

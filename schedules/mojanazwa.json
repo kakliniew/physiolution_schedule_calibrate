@@ -1,0 +1,22 @@
+{
+    "name": "mojanazwa",
+    "description": "mojopis",
+    "schedule": [
+        {
+            "interval": 1,
+            "pH": "0"
+        },
+        {
+            "interval": 2,
+            "pH": "4.31"
+        },
+        {
+            "interval": 3,
+            "pH": "7.00"
+        },
+        {
+            "interval": 4,
+            "pH": "3.46"
+        }
+    ]
+}

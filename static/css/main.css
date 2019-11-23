@@ -36,13 +36,29 @@ th, td {
     border-bottom: 1px solid #ddd;
 }
 
+td.active {
+    background-color: #3b3b3f;
+}
+
 tr:hover {
     background-color: #161719;
 }
 
-input.time-input {
+input[type=text].time-input {
     color: inherit;
-    width: 50px;
     background: none;
     border: 0;
+}
+
+input[type=text] {
+    width: 50px;
+}
+
+#managePoints:not(.active) {
+    display: none;
+}
+
+#calibrate_button {
+    width: 44%;
+    height: 100%;
 }

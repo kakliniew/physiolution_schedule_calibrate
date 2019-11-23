@@ -45,15 +45,20 @@
         </table>
     </div>
     <div>
-        <input id="add" type="submit" name="add_button" value="Add step">
+        <button id="add">Add step</button>
+        <div id="managePoints">
+            <button id="addAfterPoint">Add point</button>
+            <button id="removePoint">Remove point</button>
+        </div>
     </div>
 </div>
 <div class="panel-container">
     <div>
         <progress id="animationProgress" max="1" value="0" style="width: 100%"></progress>
-        <input id="start" type="submit" name="start_button" value="Start" disabled>
-        <input id="stop" type="submit" name="stop_button" value="Stop" disabled>
-        <input id="saveTemplate" type="submit" name="save_button" value="Save Template">
+
+        <button id="start" disabled>Start</button>
+        <button id="stop" disabled>Stop</button>
+        <button id="saveTemplate">Save template</button>
     </div>
     <div>
         <div>
@@ -64,8 +69,8 @@
             </select>
         </div>
         <div>
-            <input id="loadTemp" type="submit" name="load_button" value="Load Template">
-            <input id="deleteTemp" type="submit" name="del_button" value="Delete Template">
+            <button id="loadTemp">Load template</button>
+            <button id="deleteTemp">Delete template</button>
         </div>
     </div>
 </div>
