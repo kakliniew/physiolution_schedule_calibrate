@@ -15,9 +15,23 @@ let indexRow = table.rows[0];
 let valueRow = table.rows[1];
 let timeRow = table.rows[2];
 
+function getIndexFromTd(element) {
+    return Array.from(element.parentNode.children).indexOf(element) - 1;
+}
+
 function getTd(row, index) {
     if (row.cells.length <= index) {
         let element = document.createElement("td");
+        element.onclick = function (evt) {
+            let index = getIndexFromTd(element);
+            if (evt.ctrlKey) {
+                insertPointAfter(index);
+            } else if (evt.shiftKey) {
+                removePoint(index);
+            } else {
+                selectPoint(index);
+            }
+        };
         row.appendChild(element);
     }
     return row.cells[index];
@@ -366,6 +380,9 @@ var myChart = new Chart(ctx, {
                     max: 14,
                     min: 0,
                     stepSize: 1.0,
+                    callback: function (value) {
+                        return value + " pH"
+                    }
                 },
                 gridLines: {
                     color: "rgba(255, 255, 255, 0.25)",
@@ -399,11 +416,14 @@ var myChart = new Chart(ctx, {
             mode: 'single',
             callbacks: {
                 title: function (tooltipItems, data) {
-                    return timeFromMinutes(tooltipItems[0].xLabel);
+                    let item = tooltipItems[0];
+                    return "Index: " + (item.index + 1) + "\nInterval: " + timeFromMinutes(item.xLabel);
                 },
                 label: function (tooltipItems, data) {
-                    firstPointCtx = "First Point Selected: ";
-                    return tooltipItems.yLabel + ' pH';
+                    return tooltipItems.yLabel + " pH";
+                },
+                footer: function () {
+                    return "(CTRL + LPM to add point)\n(SHIFT + LPM to delete point)"
                 }
             }
         }
