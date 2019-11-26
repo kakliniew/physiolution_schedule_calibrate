@@ -426,7 +426,7 @@ var myChart = new Chart(ctx, {
         scales: {
             yAxes: [{
                 ticks: {
-                    // max: 14,
+                    max: 14,
                     min: 0,
                     stepSize: 1.0,
                     callback: function (value) {
