@@ -23,6 +23,9 @@ function getTd(row, index) {
     if (row.cells.length <= index) {
         let element = document.createElement("td");
         element.onclick = function (evt) {
+            if (evt.target.tagName === "INPUT") {
+                return;
+            }
             let index = getIndexFromTd(element);
             if (evt.ctrlKey) {
                 insertPointAfter(index);
@@ -117,6 +120,27 @@ function getSchedule() {
 }
 
 function updateData() {
+    // let data = getData();
+    // let maxX = data.length > 0 ? data[data.length - 1].x : 0;
+    // let maxY = data.length > 0 ? data[0].y : 0;
+    // for (let i = 0; i < data.length; i++)
+    // {
+    //     if (data[i].y > maxY)
+    //     {
+    //         maxY = data[i].y;
+    //     }
+    // }
+    // let zoomOptions = myChart.$zoom._options.zoom;
+    // zoomOptions.rangeMax = {
+    //     x: maxX,
+    //     y: maxY
+    // };
+    // let panOptions = myChart.$zoom._options.pan;
+    // panOptions.rangeMax = {
+    //     x: maxX,
+    //     y: maxY
+    // };
+
     myChart.update();
 }
 
@@ -153,7 +177,6 @@ function convertData(data) {
 }
 
 function updateChart() {
-    console.log("UPDATE CHART");
     let tableData = parseData();
     setData(convertSchedule(tableData));
     saveChannel();
@@ -194,7 +217,6 @@ function removePoint(index) {
     schedule.splice(index, 1);
     setData(convertSchedule(schedule));
     updateTable();
-    updateChart();
 }
 
 // define the chart data
@@ -231,6 +253,12 @@ var holder = document.getElementById("myChart");
 var ctx = document.getElementById("myChart").getContext("2d");
 var progress = document.getElementById('animationProgress');
 var processStop = false;
+
+window.oncontextmenu = function (evt) {
+    if (evt.target === holder) {
+        return false;
+    }
+};
 
 document.getElementById("start").addEventListener("click", function () {
     $.ajax({
@@ -289,6 +317,11 @@ document.getElementById("loadTemp").addEventListener("click", function () {
     loadTemplateFromFile(selectedTemplate);
 });
 
+document.getElementById("templatesList").ondblclick = function () {
+    var selectedTemplate = $("#templatesList").children("option:selected").val();
+    loadTemplateFromFile(selectedTemplate);
+};
+
 document.getElementById("deleteTemp").addEventListener("click", function () {
     var selectedTemplate = $("#templatesList").children("option:selected").val();
     if (!selectedTemplate) {
@@ -341,7 +374,17 @@ var customLine = Chart.controllers.line.extend({
             ctx.stroke();
             ctx.restore();
         }
+        let point = selectedPoint !== null && selectedPoint < points.length ? points[selectedPoint] : null;
+        let backgroundColor;
+        if (point !== null) {
+            backgroundColor = vm.backgroundColor;
+            point._view.backgroundColor = "rgb(255, 0, 0)";
+        }
         Chart.controllers.line.prototype.draw.apply(this, arguments);
+        if (point !== null) {
+            point._view.backgroundColor = backgroundColor;
+        }
+        // console.log(arguments);
     }
 });
 Chart.controllers.customLine = customLine;
@@ -358,6 +401,12 @@ var myChart = new Chart(ctx, {
         dragX: true,
         dragDataRound: 2,
         onDrag: function (event, datasetIndex, index, value) {
+            // myChart.$zoom._dragZoomStart = null;
+            // myChart.$zoom._dragZoomEnd = null;
+            //
+            // console.log(myChart.$zoom._node.removeEventListener("mousemove", myChart.$zoom._mouseMoveHandler));
+
+            console.log("DRAG");
             var data = myChart.data.datasets[datasetIndex].data;
             if (value.y <= 0) {
                 value.y = 0.01;
@@ -377,11 +426,11 @@ var myChart = new Chart(ctx, {
         scales: {
             yAxes: [{
                 ticks: {
-                    max: 14,
+                    // max: 14,
                     min: 0,
                     stepSize: 1.0,
                     callback: function (value) {
-                        return value + " pH"
+                        return Math.round(value) + " pH"
                     }
                 },
                 gridLines: {
@@ -394,15 +443,9 @@ var myChart = new Chart(ctx, {
                     precision: 0,
                     beginAtZero: true,
                     min: 0,
-                    suggestedMin: 0,
                     userCallback: function (label, index, labels) {
                         if (Math.round(label) === label) {
                             return timeFromMinutes(label);
-                        }
-                    },
-                    callbacks: {
-                        afterUpdate: function () {
-                            console.log(arguments);
                         }
                     }
                 },
@@ -426,7 +469,41 @@ var myChart = new Chart(ctx, {
                     return "(CTRL + LPM to add point)\n(SHIFT + LPM to delete point)"
                 }
             }
-        }
+        },
+        // plugins: {
+        //     zoom: {
+        //         pan: {
+        //             enabled: true,
+        //             mode: "x",
+        //             onPan: function (evt) {
+        //                 console.log(`I'm panning!!!`);
+        //             },
+        //             rangeMin: {
+        //                 x: 0,
+        //                 y: 0
+        //             },
+        //             rangeMax: {
+        //                 y: 14
+        //             }
+        //         },
+        //         zoom: {
+        //             enabled: true,
+        //             mode: "x",
+        //             onZoom: function({chart}) {
+        //                 console.log(chart.$zoom);
+        //                 console.log(chart.scales);
+        //             },
+        //             rangeMin: {
+        //                 x: 0,
+        //                 y: 0
+        //             },
+        //             rangeMax: {
+        //                 // x: 3,
+        //                 y: 14
+        //             }
+        //         }
+        //     }
+        // }
     }
 });
 // get the text element below the chart
@@ -454,6 +531,7 @@ function selectPoint(index) {
 
     selectedPoint = index;
     updateTable();
+    updateChart();
 }
 
 function startAnimation(element, time, maxTime, offset) {
@@ -540,11 +618,15 @@ function loadListOfTemplates() {
 }
 
 function loadTemplateFromFile(selectedTemplate) {
+    if (getData().length > 0 && !confirm("Are you sure you want to load the new template? The current chart will be replaced.")) {
+        return;
+    }
     $.get("/getTemplateSchedule", {templateName: selectedTemplate}).done(function (data) {
-        var schedule = data.schedule.map(x => {
-            return {x: x.interval, y: x.pH};
-        });
+        // var schedule = data.schedule.map(x => {
+        //     return {x: x.interval, y: x.pH};
+        // });
 
+        let schedule = data.schedule;
         clearData();
 
         setData(convertSchedule(schedule));
@@ -592,6 +674,7 @@ function saveChannel() {
 function updateButtons(alive) {
     document.getElementById("start").disabled = alive;
     document.getElementById("stop").disabled = !alive;
+    document.getElementById("outerProgress").className = alive ? "outerProgress start" : "outerProgress";
 }
 
 function waitForKillProcess(data) {

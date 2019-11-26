@@ -8,7 +8,8 @@
     <script src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-dragdata@1.0.1/dist/chartjs-plugin-dragData.min.js"></script>
-    <script src="https://requirejs.org/docs/release/2.3.6/minified/require.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@0.7.4"></script>
 
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'css/main.css') }}"/>
 
@@ -45,16 +46,20 @@
         </table>
     </div>
     <div>
-        <button id="add">Add step</button>
+        <button id="add">Add step at the end</button>
         <div id="managePoints">
-            <button id="addAfterPoint">Add point</button>
-            <button id="removePoint">Remove point</button>
+            <button id="addAfterPoint">Add point after selected</button>
+            <button id="removePoint">Remove selected point</button>
         </div>
     </div>
 </div>
 <div class="panel-container">
     <div>
-        <progress id="animationProgress" max="1" value="0" style="width: 100%"></progress>
+        <div class="barContainer">
+            <div id="outerProgress" class="outerProgress">
+                <progress class="progress" id="animationProgress" max="1" value="0" style="width: 100%"></progress>
+            </div>
+        </div>
 
         <button id="start" disabled>Start</button>
         <button id="stop" disabled>Stop</button>

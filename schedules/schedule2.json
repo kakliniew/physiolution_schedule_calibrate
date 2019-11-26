@@ -3,23 +3,23 @@
     "description": "descr",
     "schedule": [
         {
-            "interval": 20,
+            "interval": 5,
             "pH": "2.43"
         },
         {
-            "interval": 1181,
+            "interval": 11,
             "pH": "3.65"
         },
         {
-            "interval": 1434,
+            "interval": 1,
             "pH": "6.86"
         },
         {
-            "interval": 1500,
+            "interval": 3,
             "pH": "13"
         },
         {
-            "interval": 1740,
+            "interval": 1,
             "pH": "3"
         }
     ]

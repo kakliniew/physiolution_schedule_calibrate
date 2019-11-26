@@ -15,10 +15,12 @@ import time
 
 process = None
 
+
 def isProcessAlive():
     global process
 
     return process != None and process["process"].poll() is None
+
 
 def getProcess():
     global process
@@ -28,11 +30,13 @@ def getProcess():
         return process["data"]
     return None
 
+
 def waitForProcess():
     global process
 
     if isProcessAlive():
         output, err = process["process"].communicate()
+
 
 def get_shell_script_output_using_check_output(schedule):
     global process
@@ -42,7 +46,8 @@ def get_shell_script_output_using_check_output(schedule):
         endTime += s["x"]
 
     # bashCommand = "ping www.wp.pl"
-    bashCommand = "sleep 10"
+    bashCommand = "sleep {}m".format(endTime)
+    print(bashCommand)
     if not isProcessAlive():
         process = {
             "process": subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE),
@@ -53,6 +58,7 @@ def get_shell_script_output_using_check_output(schedule):
             }
         }
     print("executed")
+
 
 def killProcess():
     global process
@@ -100,8 +106,10 @@ def loadSchedule(filename):
     try:
         with open(filename) as json_file:
             data = json.load(json_file)
-
-            return data['schedule']
+            schedule = data["schedule"]
+            print(schedule)
+            data = [{"x": element["interval"], "y": element["pH"]} for element in schedule]  # divide value by 60
+            return data
     except:
         return {}
 
@@ -111,7 +119,8 @@ def save_to_json(filename, chartname, chartdescription, schedule):
     description = chartdescription
 
     JsonToPrint = {'name': name, 'description': description,
-                   'schedule': [{'interval': data["x"], "pH": data["y"]} for data in schedule]}
+                   'schedule': [{'interval': data["x"], "pH": data["y"]} for data in
+                                schedule]}  # multiply value by 60
     print(JsonToPrint)
     with open(filename, 'w') as outfile:
         json.dump(JsonToPrint, outfile, indent=4)

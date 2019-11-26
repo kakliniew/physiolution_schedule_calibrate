@@ -6,104 +6,87 @@
     <!-- import plugin script -->
     <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
 
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'css/main.css') }}"/>
 
     <style>
-        .areaM {
-            float: left;
-            width: 30%;
-            height: 400px;
-        }
-
-        .buttoncal {
-            float: left;
-            width: 30%;
-        }
-
-        .line {
-            float: left;
-            height: 10%;
-            width: 100%;
-
+        body {
+            font-size: 20px;
         }
     </style>
 
 </head>
 <body onload="updateTemp()">
 
-
-<div class="line">
-    <h1>Calibrate</h1>
-    <select name="dropdown">
-
-        <option value="1" selected>Channel 1</option>
-        <option value="2">Channel 2</option>
-        <option value="3">Channel 3</option>
-    </select>
-</div>
-
-
-<div class="areaM panel-container">
-
-
+<section class="calibrate">
     <div class="line">
-        <div class="buttoncal">
-            <label>
-                <input type="checkbox" id="checkboxTemp" checked onclick="checkboxTempchange();">Temperature
-            </label>
-        </div>
+        <h1>Calibrate</h1>
+        <select name="dropdown">
+
+            <option value="1" selected>Channel 1</option>
+            <option value="2">Channel 2</option>
+            <option value="3">Channel 3</option>
+        </select>
     </div>
-    <div class="line">
-        <div class="buttoncal">
+
+
+    <div class="panel-container">
+
+        <div class="temperature-area">
+            <div>
+                <input type="checkbox" id="checkboxTemp" checked onclick="checkboxTempchange();">
+                <span>Temperature</span>
+            </div>
             <input type="text" id="temp" value="0" size="1" onchange="sendTemp()"/>
-        </div>
-    </div>
-    <div class="line">
-        <div class="buttoncal">
             <button id="temp_button" onclick="updateTemp()">Update</button>
         </div>
 
+        <section class="cal-area">
+            <div class="cal">
+                <label for="ph1">PH1</label>
+                <input type="text" id="ph1"
+                       value={{ data['calibration']['ph']['default_cal']['ph1'] }}  size="1"/>
+                <input id="cal1_button" type="submit" name="cal1_button" value="CAL1"
+                       onclick="enableButtonFromCal1()">
+            </div>
+            <div class="cal">
+                <label for="ph2">PH2</label>
+                <input type="text" id="ph2"
+                       value={{ data['calibration']['ph']['default_cal']['ph2'] }}  size="1"/>
+                <input id="cal2_button" type="submit" name="cal2_button" value="CAL2"
+                       onclick="enableButtonFromCal2()">
+            </div>
+        </section>
+        {#        <div class="line">#}
+        {#            <div class="buttoncal"><label>PH1 </label></div>#}
+        {#            <div class="buttoncal"><label></label></div>#}
+        {#            <div class="buttoncal"><label>PH2 </label></div>#}
+        {#        </div>#}
+        {##}
+        {#        <div class="line">#}
+        {#            <div class="buttoncal"><input type="text" id="ph1"#}
+        {#                                          value={{ data['calibration']['ph']['default_cal']['ph1'] }}  size="1"/></div>#}
+        {#            <div class="buttoncal"><input type="text" id="ph2"#}
+        {#                                          value={{ data['calibration']['ph']['default_cal']['ph2'] }}  size="1"/></div>#}
+        {##}
+        {##}
+        {#        </div>#}
+
+        {#        <div class="line">#}
+        {#            <div class="buttoncal"><input id="cal1_button" type="submit" name="cal1_button" value="CAL1"#}
+        {#                                          onclick="enableButtonFromCal1()"></div>#}
+        {#            <div class="buttoncal"><input id="cal2_button" type="submit" name="cal2_button" value="CAL2"#}
+        {#                                          onclick="enableButtonFromCal2()"></div>#}
+        {##}
+        {##}
+        {#        </div>#}
+
+        <button id="calibrate_button" class="calibrate_button" disabled>CALIBRATE</button>
+        <p>Last calibration: <span id="dateLabel"></span></p>
+        <p>Deviation: <span id="Deviation"></span></p>
     </div>
-    <div class="line">
-        <div class="buttoncal"><label>PH1 </label></div>
-        <div class="buttoncal"><label></label></div>
-        <div class="buttoncal"><label>PH2 </label></div>
-    </div>
-
-    <div class="line">
-        <div class="buttoncal"><input type="text" id="ph1"
-                                      value={{ data['calibration']['ph']['default_cal']['ph1'] }}  size="1"/></div>
-        <div class="buttoncal"><input type="text" id="ph2"
-                                      value={{ data['calibration']['ph']['default_cal']['ph2'] }}  size="1"/></div>
-
-
-    </div>
-
-    <div class="line">
-        <div class="buttoncal"><input id="cal1_button" type="submit" name="cal1_button" value="CAL1"
-                                      onclick="enableButtonFromCal1()"></div>
-        <div class="buttoncal"><input id="cal2_button" type="submit" name="cal2_button" value="CAL2"
-                                      onclick="enableButtonFromCal2()"></div>
-
-
-    </div>
-
-    <div class="line">
-        <button id="calibrate_button" disabled>CALIBRATE</button>
-
-
-    </div>
-    <div class="line">
-        <label>Last calibratrion: </label>
-        <label id="dateLabel"> </label>
-    </div>
-    <div class="line">
-        <label>Deviation: </label>
-        <label id="Deviation"> </label>
-    </div>
-
-
-</div>
+</section>
 
 
 <script>
