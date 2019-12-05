@@ -13,43 +13,51 @@ import yaml
 import json
 import time
 
-process = None
+process = {}
 
-
-def isProcessAlive():
+def isProcessAlive(channel):
     global process
 
-    return process != None and process["process"].poll() is None
+    return channel in process and process[channel]["process"].poll() is None
+    # return process != None and process["process"].poll() is None
 
 
-def getProcess():
+def getProcess(channel):
     global process
 
-    if process is not None:
-        process["data"]["start"] = time.time() - process["data"]["startTime"]
-        return process["data"]
+    if channel in process:
+        process[channel]["data"]["start"] = time.time() - process[channel]["data"]["startTime"]
+        return process[channel]["data"]
+    # if process is not None:
+    #     process["data"]["start"] = time.time() - process["data"]["startTime"]
+    #     return process["data"]
     return None
 
 
-def waitForProcess():
+def waitForProcess(channel):
     global process
 
-    if isProcessAlive():
-        output, err = process["process"].communicate()
+    print(channel)
+    print(isProcessAlive(channel))
+    if isProcessAlive(channel):
+        output, err = process[channel]["process"].communicate()
+        print(output)
+        print(err)
+    print("process is done")
 
 
-def get_shell_script_output_using_check_output(schedule):
+def startProcess(schedule, channel):
     global process
 
     endTime = 0
     for s in schedule:
-        endTime += s["x"]
+        endTime += s["x"] * 60
 
     # bashCommand = "ping www.wp.pl"
-    bashCommand = "sleep {}m".format(endTime)
+    bashCommand = "sleep {}s".format(endTime)
     print(bashCommand)
-    if not isProcessAlive():
-        process = {
+    if not isProcessAlive(channel):
+        process[channel] = {
             "process": subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE),
             "data": {
                 "startTime": time.time(),
@@ -60,11 +68,20 @@ def get_shell_script_output_using_check_output(schedule):
     print("executed")
 
 
-def killProcess():
+def killProcess(channel):
     global process
 
-    if isProcessAlive():
-        process["process"].kill()
+    if isProcessAlive(channel):
+        process[channel]["process"].kill()
+
+def getProcessList():
+    global process
+
+    data = {}
+    for channel in process:
+        data[channel] = {"alive": isProcessAlive(channel), "process": getProcess(channel)}
+
+    return data
 
 
 def terminate_subprocess(process):
@@ -108,7 +125,7 @@ def loadSchedule(filename):
             data = json.load(json_file)
             schedule = data["schedule"]
             print(schedule)
-            data = [{"x": element["interval"], "y": element["pH"]} for element in schedule]  # divide value by 60
+            data = [{"x": element["interval"] / 60, "y": element["pH"]} for element in schedule]
             return data
     except:
         return {}
@@ -119,8 +136,8 @@ def save_to_json(filename, chartname, chartdescription, schedule):
     description = chartdescription
 
     JsonToPrint = {'name': name, 'description': description,
-                   'schedule': [{'interval': data["x"], "pH": data["y"]} for data in
-                                schedule]}  # multiply value by 60
+                   'schedule': [{'interval': data["x"] * 60, "pH": data["y"]} for data in
+                                schedule]}
     print(JsonToPrint)
     with open(filename, 'w') as outfile:
         json.dump(JsonToPrint, outfile, indent=4)

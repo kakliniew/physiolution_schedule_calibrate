@@ -1,0 +1,22 @@
+{
+    "name": "test2",
+    "schedule": [
+        {
+            "pH": 0.12,
+            "interval": 120
+        },
+        {
+            "pH": 4.31,
+            "interval": 120
+        },
+        {
+            "pH": 7,
+            "interval": 180
+        },
+        {
+            "pH": 3.46,
+            "interval": 240
+        }
+    ],
+    "description": "test2"
+}

@@ -1,18 +1,13 @@
+import os
+
+import yaml
 from flask import Flask, jsonify
 from flask import render_template
 from flask import request
-from datetime import datetime, timedelta
 
-import subprocess
-from subprocess import Popen, PIPE
-from subprocess import check_output
-import os
-import signal
-import yaml
-import json
-from functions import get_shell_script_output_using_check_output, terminate_subprocess, cal1Function, cal2Function, \
-    calibrateFunction, getLabelsAndValuesFromJson, save_to_json, getTemp, saveDataToConfFromCablibrateButton, \
-    getNumberOfChannels, loadSchedule, isProcessAlive, waitForProcess, killProcess, getProcess
+from functions import startProcess, cal1Function, cal2Function, \
+    calibrateFunction, save_to_json, getTemp, saveDataToConfFromCablibrateButton, \
+    getNumberOfChannels, loadSchedule, waitForProcess, killProcess, getProcessList
 
 with open('configuration.yaml') as f:
     data = yaml.load(f, Loader=yaml.FullLoader)
@@ -50,19 +45,32 @@ def startButton():
     name = "last_schedule"
     description = "last run schedule for one of channels"
 
+    channels = request.get_json()["channels"]
     schedule = request.get_json()["schedule"]
     save_to_json('schedule.json', name, description, schedule)
-    get_shell_script_output_using_check_output(schedule)
-    return {"alive": isProcessAlive(), "process": getProcess()}
+    for channel in channels:
+        startProcess(schedule, channel)
+    return jsonify(getProcessList())
 
 @app.route("/process_alive", methods=["GET"])
 def processAlive():
-    return {"alive": isProcessAlive(), "process": getProcess()}
+    return jsonify(getProcessList())
+    # return {"alive": isProcessAlive(), "process": getProcess()}
 
-@app.route("/wait_process", methods=["GET"])
+@app.route("/wait_process", methods=["POST"])
 def waitProcess():
-    waitForProcess()
+    channel = request.get_json()["channel"]
+    waitForProcess(channel)
+    return {"status": "OK", "channels": getProcessList()}
+
+@app.route("/stop_button", methods=["POST"])
+def stopButton():
+    channels = request.get_json()["channels"]
+
+    for channel in channels:
+        killProcess(channel)
     return "OK"
+
     
 @app.route("/deleteTemplate", methods=["GET"])
 def deleteTemplate():
@@ -82,13 +90,6 @@ def saveTemplate():
     save_to_json('./schedules/' + name + '.json', name, description, schedule)
 
     return "template_saved"
-
-@app.route("/stop_button", methods=["POST"])
-def stopButton():
-    # terminate_subprocess(process)
-    killProcess()
-    return "OK"
-
 
 @app.route("/calibrate", methods=['POST', 'GET'])
 def calibrate():

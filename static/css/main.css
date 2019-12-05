@@ -1,6 +1,8 @@
 body {
     background-color: #161719;
     color: #d8d9da;
+
+    font-family: sans-serif;
 }
 
 select {
@@ -127,4 +129,8 @@ input[type=text] {
     height: 100%;
     background-color: white;
     border-radius: inherit;
+}
+
+#templatesList option {
+    padding-right: 15px;
 }

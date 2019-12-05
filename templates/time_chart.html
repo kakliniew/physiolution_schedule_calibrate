@@ -39,9 +39,10 @@
 
             </tr>
             <tr id="thirdRow">
+                <td>Interval</td>
+            </tr>
+            <tr id="fourthRow">
                 <td>Time</td>
-
-
             </tr>
         </table>
     </div>
@@ -61,8 +62,11 @@
             </div>
         </div>
 
-        <button id="start" disabled>Start</button>
-        <button id="stop" disabled>Stop</button>
+        <span id="channelCheckTitle"></span>
+        <div id="channelCheckboxes">
+        </div>
+        <button id="start" hidden>Start process for channels</button>
+        <button id="stop" hidden>Stop process for channels</button>
         <button id="saveTemplate">Save template</button>
     </div>
     <div>
@@ -70,7 +74,7 @@
             <label>Templates</label>
         </div>
         <div>
-            <select name="templates" id="templatesList" size=4>
+            <select name="templates" id="templatesList" size=8>
             </select>
         </div>
         <div>

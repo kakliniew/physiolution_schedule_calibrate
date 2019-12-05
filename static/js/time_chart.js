@@ -6,6 +6,21 @@ if (currentChannel !== null) {
 } else {
     currentChannel = 0;
 }
+let channelData = {"name": "New workout", "edited": false};
+let processInfo = {};
+
+function getChartName() {
+    return channelData.name + (channelData.edited ? " (edited)" : "")
+}
+
+function setProcessInfo(data) {
+    processInfo = data;
+    Object.keys(processInfo).forEach(channel => {
+        processInfo[channel].startTime = new Date().getTime();
+    });
+}
+
+let animationInterval = null;
 
 // do not resize the chart canvas when its container does (keep at 600x400px)
 Chart.defaults.global.responsive = true;
@@ -13,7 +28,8 @@ Chart.defaults.global.responsive = true;
 let table = document.getElementById("tblData");
 let indexRow = table.rows[0];
 let valueRow = table.rows[1];
-let timeRow = table.rows[2];
+let intervalRow = table.rows[2];
+let timeRow = table.rows[3];
 
 function getIndexFromTd(element) {
     return Array.from(element.parentNode.children).indexOf(element) - 1;
@@ -40,9 +56,9 @@ function getTd(row, index) {
     return row.cells[index];
 }
 
-function getInput(element) {
+function getInput(element, onChange) {
     if (element.firstChild === null) {
-        let input = generateInput();
+        let input = generateInput(onChange);
         element.appendChild(input);
         return input;
     }
@@ -50,8 +66,24 @@ function getInput(element) {
         return element.firstChild;
     } else {
         element.firstChild.remove();
-        return getInput(element);
+        return getInput(element, onChange);
     }
+}
+
+function generateInput(onChange) {
+    let input = document.createElement("input");
+    input.className = "time-input";
+    input.size = "1";
+    input.type = "text";
+    input.onchange = function (event) {
+        if (onChange) {
+            onChange();
+        }
+
+        let index = getIndexFromTd(input.parentNode);
+        updatePoint(index);
+    };
+    return input;
 }
 
 function setIndex(index, value) {
@@ -63,14 +95,27 @@ function setIndex(index, value) {
 function setValue(index, value) {
     let element = getTd(valueRow, index);
     element.className = index - 1 === selectedPoint ? "active" : "";
-    let input = getInput(element);
+    let input = getInput(element, () => {
+        updateChart(() => convertSchedule(parseSchedule()));
+    });
+    input.value = value;
+}
+
+function setIntervalValue(index, value) {
+    let element = getTd(intervalRow, index);
+    element.className = index - 1 === selectedPoint ? "active" : "";
+    let input = getInput(element, () => {
+        updateChart(() => convertSchedule(parseSchedule()));
+    });
     input.value = value;
 }
 
 function setTime(index, value) {
     let element = getTd(timeRow, index);
     element.className = index - 1 === selectedPoint ? "active" : "";
-    let input = getInput(element);
+    let input = getInput(element, () => {
+        updateChart(() => parseData());
+    });
     input.value = value;
 }
 
@@ -82,7 +127,7 @@ function removeExcess(row) {
 }
 
 function timeFromMinutes(minutes) {
-    return newDateString(Math.floor(minutes / 60), Math.floor(minutes % 60));
+    return newDateString(Math.floor(minutes / 60), Math.round(minutes % 60));
 }
 
 function newDateString(hours, minutes) {
@@ -91,7 +136,9 @@ function newDateString(hours, minutes) {
 
 function parseTimeToMinutes(value) {
     let split = value.split(":");
-    return (parseInt(split[0]) * 60) + parseInt(split[1]);
+    let hours = Math.max(parseInt(split[0] * 60), 0);
+    let minutes = Math.max(parseInt(split[1]), 0);
+    return hours + minutes;
 }
 
 function insertPointAfter(index) {
@@ -107,6 +154,11 @@ function insertPointAfter(index) {
 }
 
 function setData(data) {
+    // if (isSelectedChannelAlive()) {
+    //     return false;
+    // }
+    channelData.edited = true;
+
     myChart.data.datasets[0].data = data;
     updateData();
 }
@@ -120,31 +172,13 @@ function getSchedule() {
 }
 
 function updateData() {
-    // let data = getData();
-    // let maxX = data.length > 0 ? data[data.length - 1].x : 0;
-    // let maxY = data.length > 0 ? data[0].y : 0;
-    // for (let i = 0; i < data.length; i++)
-    // {
-    //     if (data[i].y > maxY)
-    //     {
-    //         maxY = data[i].y;
-    //     }
-    // }
-    // let zoomOptions = myChart.$zoom._options.zoom;
-    // zoomOptions.rangeMax = {
-    //     x: maxX,
-    //     y: maxY
-    // };
-    // let panOptions = myChart.$zoom._options.pan;
-    // panOptions.rangeMax = {
-    //     x: maxX,
-    //     y: maxY
-    // };
-
+    myChart.data.datasets[0].label = getChartName();
     myChart.update();
 }
 
 function clearData() {
+    selectedPoint = null;
+
     setData([]);
     updateTable();
 }
@@ -167,33 +201,42 @@ function convertData(data) {
     let lastValue = 0;
     for (let i = 0; i < data.length; i++) {
         let point = data[i];
+        let currentInterval = Math.max(point.x - lastValue, 1);
         schedule.push({
             y: point.y,
-            x: point.x - lastValue
+            x: currentInterval
         });
         lastValue = point.x;
     }
     return schedule;
 }
 
-function updateChart() {
-    let tableData = parseData();
-    setData(convertSchedule(tableData));
+function updateChart(functionToParse) {
+    // if (isSelectedChannelAlive()) {
+    //     updateTable();
+    //     updateData();
+    //     return false;
+    // }
+    let data = functionToParse();
+    setData(data);
     saveChannel();
 }
 
 function updateTable() {
     console.log("UPDATE TABLE");
 
-    let schedule = convertData(getData());
+    let data = getData();
+    let schedule = convertData(data);
     for (let i = 0; i < schedule.length; i++) {
         let point = schedule[i];
         setIndex(i + 1, i + 1);
         setValue(i + 1, point.y);
-        setTime(i + 1, timeFromMinutes(point.x));
+        setIntervalValue(i + 1, timeFromMinutes(point.x));
+        setTime(i + 1, timeFromMinutes(data[i].x));
     }
     removeExcess(indexRow);
     removeExcess(valueRow);
+    removeExcess(intervalRow);
     removeExcess(timeRow);
 
     document.getElementById("managePoints").className = selectedPoint !== null ? "active" : "";
@@ -202,13 +245,16 @@ function updateTable() {
 }
 
 function updatePoint(i) {
+    channelData.edited = true;
+
     let data = getData();
 
     let lastValue = i > 0 ? data[i - 1].x : 0;
     let point = data[i];
     setIndex(i + 1, i + 1);
     setValue(i + 1, point.y);
-    setTime(i + 1, timeFromMinutes(point.x - lastValue));
+    setIntervalValue(i + 1, timeFromMinutes(point.x - lastValue));
+    setTime(i + 1, timeFromMinutes(point.x));
     saveChannel();
 }
 
@@ -260,16 +306,36 @@ window.oncontextmenu = function (evt) {
     }
 };
 
+document.addEventListener('keyup', function (e) {
+    if (e.keyCode === 27) {
+        myChart.resetZoom();
+    }
+    if (e.keyCode === 13) {
+        var selectedTemplate = $("#templatesList:focus").children("option:selected").val();
+        if (selectedTemplate) {
+            loadTemplateFromFile(selectedTemplate);
+        }
+    }
+});
+
 document.getElementById("start").addEventListener("click", function () {
+    if (isAnyCheckedProcessAlive()) {
+        alert("Can not to start process for already alive channel");
+        return;
+    }
+    let checkedChannels = getCheckedChannels();
     $.ajax({
         url: "/start_button",
         type: "POST",
         success: function (data) {
-            waitForKillProcess(data);
-            updateButtons(data.alive);
+            saveChannels(checkedChannels);
+            // processInfo = data;
+            setProcessInfo(data);
+            checkedChannels.forEach(channel => waitForKillProcess(channel));
+            updateButtons();
         },
         contentType: "application/json",
-        data: JSON.stringify({schedule: getSchedule()}),
+        data: JSON.stringify({"schedule": getSchedule(), "channels": checkedChannels})
     });
 });
 
@@ -277,9 +343,11 @@ document.getElementById("stop").addEventListener("click", function () {
     $.ajax({
         url: "/stop_button",
         type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({"channels": getCheckedChannels()}),
         success: function (data) {
             if (data === "OK") {
-                updateButtons(false);
+                updateButtons();
             }
         }
     });
@@ -395,33 +463,36 @@ var myChart = new Chart(ctx, {
     data: chartData,
     options: {
         legend: {
-            display: false
+            display: true
         },
         dragData: true,
         dragX: true,
         dragDataRound: 2,
+        onDragStart() {
+            if (isSelectedChannelAlive()) {
+                return false;
+            }
+        },
         onDrag: function (event, datasetIndex, index, value) {
-            // myChart.$zoom._dragZoomStart = null;
-            // myChart.$zoom._dragZoomEnd = null;
-            //
-            // console.log(myChart.$zoom._node.removeEventListener("mousemove", myChart.$zoom._mouseMoveHandler));
-
-            console.log("DRAG");
-            var data = myChart.data.datasets[datasetIndex].data;
+            let data = myChart.data.datasets[datasetIndex].data;
             if (value.y <= 0) {
                 value.y = 0.01;
             }
-            if (index > 0 && data[index - 1].x > value.x) {
-                value.x = data[index - 1].x;
-            } else if (index < data.length - 1 && data[index + 1].x < value.x) {
+            if (value.x <= 0) {
+                value.x = 1;
+            }
+            value.x = Math.round(value.x);
+            if (index > 0 && data[index - 1].x >= value.x) {
+                value.x = data[index - 1].x + 1;
+            } else if (index < data.length - 1 && data[index + 1].x <= value.x) {
                 value.x = data[index + 1].x;
             }
             updatePoint(index);
-            updateChart();
+            updateChart(() => convertSchedule(parseSchedule()));
         },
         onDragEnd: function (e, datasetIndex, index, value) {
             updatePoint(index);
-            updateChart();
+            updateChart(() => convertSchedule(parseSchedule()));
         },
         scales: {
             yAxes: [{
@@ -460,7 +531,7 @@ var myChart = new Chart(ctx, {
             callbacks: {
                 title: function (tooltipItems, data) {
                     let item = tooltipItems[0];
-                    return "Index: " + (item.index + 1) + "\nInterval: " + timeFromMinutes(item.xLabel);
+                    return "Index: " + (item.index + 1) + "\nInterval: " + timeFromMinutes(getSchedule()[item.index].x);
                 },
                 label: function (tooltipItems, data) {
                     return tooltipItems.yLabel + " pH";
@@ -470,40 +541,15 @@ var myChart = new Chart(ctx, {
                 }
             }
         },
-        // plugins: {
-        //     zoom: {
-        //         pan: {
-        //             enabled: true,
-        //             mode: "x",
-        //             onPan: function (evt) {
-        //                 console.log(`I'm panning!!!`);
-        //             },
-        //             rangeMin: {
-        //                 x: 0,
-        //                 y: 0
-        //             },
-        //             rangeMax: {
-        //                 y: 14
-        //             }
-        //         },
-        //         zoom: {
-        //             enabled: true,
-        //             mode: "x",
-        //             onZoom: function({chart}) {
-        //                 console.log(chart.$zoom);
-        //                 console.log(chart.scales);
-        //             },
-        //             rangeMin: {
-        //                 x: 0,
-        //                 y: 0
-        //             },
-        //             rangeMax: {
-        //                 // x: 3,
-        //                 y: 14
-        //             }
-        //         }
-        //     }
-        // }
+        plugins: {
+            zoom: {
+                zoom: {
+                    enabled: true,
+                    mode: "x",
+                    drag: true
+                }
+            }
+        }
     }
 });
 // get the text element below the chart
@@ -531,12 +577,31 @@ function selectPoint(index) {
 
     selectedPoint = index;
     updateTable();
-    updateChart();
+    updateData();
+}
+
+function animationStart(process) {
+    resetAnimation();
+    // processStop = false;
+
+    let time = (process.process.start) * 1000 + (new Date().getTime() - process.startTime);
+    let maxTime = process.process.time * 1000;
+    animationInterval = window.setInterval(function () {
+        progress.value = 0.003 + (time / maxTime);
+        if (progress.value >= 1) {
+            stopAnimation();
+        }
+
+        time += 10;
+    }, 10);
+
+    // startAnimation(progress, process.process.start * 1000, process.process.time * 1000, 10);
 }
 
 function startAnimation(element, time, maxTime, offset) {
+    console.log("TESt");
     if (processStop === false) {
-        element.value = time / maxTime;
+        element.value = 0.003 + (time / maxTime);
         if (element.value >= 1) {
             return;
         }
@@ -544,48 +609,37 @@ function startAnimation(element, time, maxTime, offset) {
         window.setTimeout(function () {
             startAnimation(element, time + offset, maxTime, offset);
         }, Math.min(maxTime - time, offset));
-    } else processStop = false;
+    }
 }
 
 function stopAnimation() {
-    processStop = true;
+    console.log("stop");
+    // processStop = true;
+    animationInterval !== null && clearInterval(animationInterval);
 }
 
-function generateInput() {
+function resetAnimation() {
+    stopAnimation();
+    progress.value = 0;
+}
+
+function createChannelInput(divId, index, id, type, name, onchange) {
+    let node = document.createElement('div');
+    node.id = divId;
     let input = document.createElement("input");
-    input.className = "time-input";
-    input.size = "1";
-    input.type = "text";
-    input.onchange = function () {
-        updateChart();
-    };
-    return input;
-}
+    input.type = type;
+    input.id = id;
+    input.name = name;
+    let label = document.createElement("label");
+    label.setAttribute("for", input.id);
+    label.textContent = "channel" + index;
 
-function createChannels() {
-    var div = document.getElementById('channelRadios');
-    for (var i = 0; i < numberOfChannels; i++) {
+    input.onchange = onchange;
 
-        console.log(numberOfChannels);
+    node.appendChild(input);
+    node.appendChild(label);
 
-        var node = document.createElement('div');
-        var input = document.createElement("input");
-        input.type = "radio";
-        input.id = "check" + i;
-        input.name = "check";
-        var label = document.createElement("label");
-        label.setAttribute("for", input.id);
-        label.textContent = "channel" + i;
-
-        let index = i;
-        input.onchange = function (event) {
-            selectChannel(index);
-        };
-
-        node.appendChild(input);
-        node.appendChild(label);
-        div.appendChild(node);
-    }
+    return node;
 }
 
 function selectChannel(index) {
@@ -593,9 +647,22 @@ function selectChannel(index) {
     console.log("select channel " + index);
     localStorage.setItem("current.channel", index);
     document.getElementById("channelId").textContent = index;
-    document.getElementById("check" + index).checked = true;
-
+    updateButtons();
     loadChannel(index);
+}
+
+function getCheckedChannels() {
+    let checked = [];
+    let checkboxes = document.getElementById("channelCheckboxes").getElementsByTagName("input");
+
+    for (let i = 0; i < numberOfChannels; i++) {
+        // let checkbox = document.getElementById("check" + i);
+        // if (checkbox && checkbox.checked) {
+        if (checkboxes[i].checked) {
+            checked.push(i);
+        }
+    }
+    return checked;
 }
 
 function loadListOfTemplates() {
@@ -618,6 +685,10 @@ function loadListOfTemplates() {
 }
 
 function loadTemplateFromFile(selectedTemplate) {
+    if (isSelectedChannelAlive()) {
+        alert("You can not load template for current channels, because channel is alive!");
+        return;
+    }
     if (getData().length > 0 && !confirm("Are you sure you want to load the new template? The current chart will be replaced.")) {
         return;
     }
@@ -625,6 +696,8 @@ function loadTemplateFromFile(selectedTemplate) {
         // var schedule = data.schedule.map(x => {
         //     return {x: x.interval, y: x.pH};
         // });
+        channelData.name = selectedTemplate;
+        channelData.edited = false;
 
         let schedule = data.schedule;
         clearData();
@@ -663,55 +736,145 @@ function loadChannel(index) {
     if (!item) {
         return;
     }
-    setData(convertSchedule(JSON.parse(item)));
+    let data = JSON.parse(item);
+    channelData = data.data;
+    setData(convertSchedule(data.schedule));
     updateTable();
 }
 
 function saveChannel() {
-    localStorage.setItem("channel." + currentChannel, JSON.stringify(parseData()));
+    saveChannels([currentChannel])
 }
 
-function updateButtons(alive) {
-    document.getElementById("start").disabled = alive;
-    document.getElementById("stop").disabled = !alive;
-    document.getElementById("outerProgress").className = alive ? "outerProgress start" : "outerProgress";
-}
-
-function waitForKillProcess(data) {
-    if (!data.alive) {
-        return;
+function saveChannels(channels) {
+    for (let i in channels) {
+        localStorage.setItem("channel." + channels[i], JSON.stringify({
+            "schedule": getSchedule(),
+            "data": channelData
+        }));
     }
-    startAnimation(progress, data.process.start * 1000, data.process.time * 60 * 1000, 10);
+}
 
-    $.get("/wait_process", function (data) {
-        if (data === "OK") {
-            updateButtons(false);
-            stopAnimation();
+function isSelectedChannelAlive() {
+    return isProcessAlive(currentChannel);
+}
+
+function isProcessAlive(channel) {
+    return processInfo[channel] !== undefined && processInfo[channel].alive;
+}
+
+function isAnyCheckedProcessAlive() {
+    let channels = getCheckedChannels();
+    for (let key in channels) {
+        console.log("channel id " + channels[key]);
+        if (isProcessAlive(channels[key])) {
+            return true;
         }
-    });
+    }
+    return false;
+}
+
+function updateButtons() {
+    console.log("xd");
+
+    let alive = isProcessAlive(currentChannel);
+    document.getElementById("start").hidden = alive;
+    document.getElementById("stop").hidden = !alive;
+    document.getElementById("outerProgress").className = alive ? "outerProgress start" : "outerProgress";
+
+    document.getElementById("channelCheckTitle").textContent = alive ? "Stop this schedule for channels:" : "Start this schedule for channels:";
+
+    let radios = document.getElementById('channelRadios');
+    let checkboxes = document.getElementById('channelCheckboxes');
+    radios.innerHTML = "";
+    checkboxes.innerHTML = "";
+    for (let i = 0; i < numberOfChannels; i++) {
+        radios.appendChild(createChannelInput("channelDiv" + i, i, "channel" + i, "radio", "channel", function () {
+                selectChannel(i);
+            }
+        ));
+        let checkDiv = createChannelInput("checkDiv" + i, i, "check" + i, "checkbox", "check");
+        checkboxes.appendChild(checkDiv);
+
+        let processAlive = isProcessAlive(i);
+        checkDiv.hidden = !((alive && processAlive) || (!alive && !processAlive));
+    }
+    document.getElementById("check" + currentChannel).checked = true;
+    document.getElementById("check" + currentChannel).disabled = true;
+
+    document.getElementById("channel" + currentChannel).checked = true;
+
+    resetAnimation();
+    if (alive) {
+        let process = processInfo[currentChannel];
+        animationStart(process);
+    }
+}
+
+function waitForKillProcess(channel) {
+    channel = parseInt(channel);
+    if (isProcessAlive(channel)) {
+        // if (channel === currentChannel) {
+        //     let process = processInfo[channel];
+        //     console.log("TRY START")
+        //     startAnimation(progress, process.process.start * 1000, process.process.time * 1000, 10);
+        // }
+
+        $.ajax({
+            url: "/wait_process",
+            type: "POST",
+            success: function (data) {
+                // processInfo = data.channels;
+                setProcessInfo(data.channels);
+                if (data.status === "OK") {
+                    updateButtons();
+                    stopAnimation();
+                }
+            },
+            contentType: "application/json",
+            data: JSON.stringify({"channel": channel})
+        });
+    }
 }
 
 function onStart() {
     $.get("/process_alive", function (data) {
-        waitForKillProcess(data);
-        updateButtons(data.alive);
+        // processInfo = data;
+        setProcessInfo(data);
+        Object.keys(processInfo).forEach((channel) => waitForKillProcess(channel));
+        updateButtons();
     });
-    createChannels();
     selectChannel(currentChannel);
     loadListOfTemplates();
 }
 
-function parseData() {
-
+function parseSchedule() {
     var schedule = [];
 
     var n = table.rows[0].cells.length;
     for (var i = 1; i < n; i++) {
         let point = {
-            x: parseTimeToMinutes(table.rows[2].cells[i].children[0].value),
+            x: Math.max(parseTimeToMinutes(table.rows[2].cells[i].children[0].value), 1),
             y: parseFloat(table.rows[1].cells[i].children[0].value)
         };
         schedule.push(point);
     }
     return schedule;
+}
+
+function parseData() {
+    var data = [];
+
+    let lastTime = 0;
+    var n = table.rows[0].cells.length;
+    for (var i = 1; i < n; i++) {
+        let parsedTime = parseTimeToMinutes(table.rows[3].cells[i].children[0].value);
+        let point = {
+            x: lastTime >= parsedTime ? lastTime + 1 : parsedTime,
+            y: parseFloat(table.rows[1].cells[i].children[0].value)
+        };
+        data.push(point);
+        lastTime = point.x;
+    }
+    return data;
 }

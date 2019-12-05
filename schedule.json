@@ -1,26 +1,86 @@
 {
-    "name": "last_schedule",
-    "description": "last run schedule for one of channels",
     "schedule": [
         {
-            "interval": 5,
-            "pH": "2.43"
+            "interval": 60,
+            "pH": 3.68
         },
         {
-            "interval": 11,
-            "pH": "3.65"
+            "interval": 60,
+            "pH": 7.27
         },
         {
-            "interval": 1,
-            "pH": "6.86"
+            "interval": 60,
+            "pH": 7.27
         },
         {
-            "interval": 3,
-            "pH": "13"
+            "interval": 60,
+            "pH": 7.27
         },
         {
-            "interval": 1,
-            "pH": "3"
+            "interval": 60,
+            "pH": 7.27
+        },
+        {
+            "interval": 60,
+            "pH": 7.27
+        },
+        {
+            "interval": 60,
+            "pH": 7.27
+        },
+        {
+            "interval": 60,
+            "pH": 7.27
+        },
+        {
+            "interval": 60,
+            "pH": 7.27
+        },
+        {
+            "interval": 60,
+            "pH": 7.27
+        },
+        {
+            "interval": 60,
+            "pH": 7.27
+        },
+        {
+            "interval": 60,
+            "pH": 7.27
+        },
+        {
+            "interval": 60,
+            "pH": 7.27
+        },
+        {
+            "interval": 60,
+            "pH": 7.27
+        },
+        {
+            "interval": 60,
+            "pH": 7.27
+        },
+        {
+            "interval": 60,
+            "pH": 7.27
+        },
+        {
+            "interval": 60,
+            "pH": 7.27
+        },
+        {
+            "interval": 60,
+            "pH": 7.27
+        },
+        {
+            "interval": 60,
+            "pH": 7.27
+        },
+        {
+            "interval": 60,
+            "pH": 4.21
         }
-    ]
+    ],
+    "name": "last_schedule",
+    "description": "last run schedule for one of channels"
 }
