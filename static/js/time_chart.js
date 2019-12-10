@@ -6,11 +6,35 @@ if (currentChannel !== null) {
 } else {
     currentChannel = 0;
 }
-let channelData = {"name": "New workout", "edited": false};
+let channelData = {"name": "New workout", schedule: []};
 let processInfo = {};
 
 function getChartName() {
-    return channelData.name + (channelData.edited ? " (edited)" : "")
+    let name = channelData.name;
+    if (!channelData.schedule || !isEqual(channelData.schedule, getSchedule())) {
+        name += " (edited)";
+    }
+    return name;
+}
+
+function isEqual(first, second) {
+    if (first === second) {
+        return true;
+    }
+    let isArray = Array.isArray(first) && Array.isArray(second);
+    let isObject = typeof first === "object" && typeof second === "object";
+    if (isObject || isArray) {
+        for (let key in first) {
+            if (!first.hasOwnProperty(key) || !second.hasOwnProperty(key)) {
+                return false;
+            }
+            if (!isEqual(first[key], second[key])) {
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
 }
 
 function setProcessInfo(data) {
@@ -39,9 +63,9 @@ function getTd(row, index) {
     if (row.cells.length <= index) {
         let element = document.createElement("td");
         element.onclick = function (evt) {
-            if (evt.target.tagName === "INPUT") {
-                return;
-            }
+            // if (evt.target.tagName === "INPUT") {
+            //     return;
+            // }
             let index = getIndexFromTd(element);
             if (evt.ctrlKey) {
                 insertPointAfter(index);
@@ -62,7 +86,7 @@ function getInput(element, onChange) {
         element.appendChild(input);
         return input;
     }
-    if (element.firstChild.tagName === "input") {
+    if (element.firstChild.tagName === "INPUT") {
         return element.firstChild;
     } else {
         element.firstChild.remove();
@@ -77,7 +101,7 @@ function generateInput(onChange) {
     input.type = "text";
     input.onchange = function (event) {
         if (onChange) {
-            onChange();
+            onChange.apply(this, arguments);
         }
 
         let index = getIndexFromTd(input.parentNode);
@@ -95,28 +119,46 @@ function setIndex(index, value) {
 function setValue(index, value) {
     let element = getTd(valueRow, index);
     element.className = index - 1 === selectedPoint ? "active" : "";
-    let input = getInput(element, () => {
+    let input = getInput(element, (event) => {
+        if (event.target.value <= 0 || event.target.value > 14) {
+            updateTable();
+            alert("Invalid data provided");
+            return;
+        }
         updateChart(() => convertSchedule(parseSchedule()));
     });
     input.value = value;
+    input.disabled = isProcessAlive(currentChannel);
 }
 
 function setIntervalValue(index, value) {
     let element = getTd(intervalRow, index);
     element.className = index - 1 === selectedPoint ? "active" : "";
-    let input = getInput(element, () => {
+    let input = getInput(element, (event) => {
+        if (!isTimeValid(event.target.value)) {
+            updateTable();
+            alert("Invalid data provided");
+            return;
+        }
         updateChart(() => convertSchedule(parseSchedule()));
     });
     input.value = value;
+    input.disabled = isProcessAlive(currentChannel);
 }
 
 function setTime(index, value) {
     let element = getTd(timeRow, index);
     element.className = index - 1 === selectedPoint ? "active" : "";
     let input = getInput(element, () => {
+        if (!isTimeValid(event.target.value)) {
+            updateTable();
+            alert("Invalid data provided");
+            return;
+        }
         updateChart(() => parseData());
     });
     input.value = value;
+    input.disabled = isProcessAlive(currentChannel);
 }
 
 function removeExcess(row) {
@@ -128,6 +170,25 @@ function removeExcess(row) {
 
 function timeFromMinutes(minutes) {
     return newDateString(Math.floor(minutes / 60), Math.round(minutes % 60));
+}
+
+function isTimeValid(value) {
+    if (value.length !== 5) {
+        return false;
+    }
+    if (value.charAt(2) !== ':') {
+        return false;
+    }
+    for (let i = 0; i < value.length; i++) {
+        if (i === 2) {
+            continue;
+        }
+        let charCodeAt = value.charCodeAt(i);
+        if (charCodeAt < 48 || charCodeAt > 57) {
+            return false;
+        }
+    }
+    return true;
 }
 
 function newDateString(hours, minutes) {
@@ -142,6 +203,11 @@ function parseTimeToMinutes(value) {
 }
 
 function insertPointAfter(index) {
+    if (isProcessAlive(currentChannel)) {
+        alert("You can not insert point for current channel, because channel is alive!");
+        return;
+    }
+
     let schedule = getSchedule();
     let point = schedule[index];
     schedule.splice(index + 1, 0, {
@@ -157,8 +223,6 @@ function setData(data) {
     // if (isSelectedChannelAlive()) {
     //     return false;
     // }
-    channelData.edited = true;
-
     myChart.data.datasets[0].data = data;
     updateData();
 }
@@ -173,6 +237,8 @@ function getSchedule() {
 
 function updateData() {
     myChart.data.datasets[0].label = getChartName();
+    myChart.data.datasets[0].backgroundColor = isProcessAlive(currentChannel) ? "rgba(255, 255, 255, 0.4)" : "rgba(75, 192, 192, 0.4)";
+    myChart.data.datasets[0].borderColor = isProcessAlive(currentChannel) ? "rgb(200, 200, 200)" : "rgb(75, 192, 192)";
     myChart.update();
 }
 
@@ -245,8 +311,6 @@ function updateTable() {
 }
 
 function updatePoint(i) {
-    channelData.edited = true;
-
     let data = getData();
 
     let lastValue = i > 0 ? data[i - 1].x : 0;
@@ -259,6 +323,10 @@ function updatePoint(i) {
 }
 
 function removePoint(index) {
+    if (isProcessAlive(currentChannel)) {
+        alert("You can not remove point for current channel, because channel is alive!");
+        return;
+    }
     var schedule = getSchedule();
     schedule.splice(index, 1);
     setData(convertSchedule(schedule));
@@ -317,6 +385,11 @@ document.addEventListener('keyup', function (e) {
         }
     }
 });
+
+document.getElementById("recalibrate").addEventListener("click", function () {
+    window.open("/calibrate", "", "height=410,width=450,location=0,menubar=0,status=0,titlebar=0,toolbar=0");
+});
+
 
 document.getElementById("start").addEventListener("click", function () {
     if (isAnyCheckedProcessAlive()) {
@@ -416,19 +489,18 @@ function setStyle(ctx, vm) {
 Chart.controllers.customLine = Chart.controllers.line;
 var customLine = Chart.controllers.line.extend({
     draw: function () {
-        var meta = this.getMeta();
-        var me = meta.dataset;
-        var vm = me._view;
-        var ctx = this.chart.ctx;
+        let meta = this.getMeta();
+        let me = meta.dataset;
+        let vm = me._view;
+        let ctx = this.chart.ctx;
         let points = me._children;
 
         if (!points.length) {
             return;
         }
 
-        var data = meta.data;
-        if (data.length > 0 && data[0].x !== 0) {
-
+        let data = meta.data;
+        if (data.length > 0 && data[0]._view.x !== 0 && data[0]._view.x >= 0) {
             let point = points[0]._view;
 
             ctx.save();
@@ -647,8 +719,8 @@ function selectChannel(index) {
     console.log("select channel " + index);
     localStorage.setItem("current.channel", index);
     document.getElementById("channelId").textContent = index;
-    updateButtons();
     loadChannel(index);
+    updateButtons();
 }
 
 function getCheckedChannels() {
@@ -686,22 +758,19 @@ function loadListOfTemplates() {
 
 function loadTemplateFromFile(selectedTemplate) {
     if (isSelectedChannelAlive()) {
-        alert("You can not load template for current channels, because channel is alive!");
+        alert("You can not load template for current channel, because channel is alive!");
         return;
     }
     if (getData().length > 0 && !confirm("Are you sure you want to load the new template? The current chart will be replaced.")) {
         return;
     }
     $.get("/getTemplateSchedule", {templateName: selectedTemplate}).done(function (data) {
-        // var schedule = data.schedule.map(x => {
-        //     return {x: x.interval, y: x.pH};
-        // });
-        channelData.name = selectedTemplate;
-        channelData.edited = false;
-
         let schedule = data.schedule;
-        clearData();
 
+        channelData.name = selectedTemplate;
+        channelData.schedule = schedule;
+
+        clearData();
         setData(convertSchedule(schedule));
         updateTable();
     });
@@ -730,13 +799,19 @@ function saveTemplate() {
 }
 
 function loadChannel(index) {
+    console.log("LOAD CHANNEL " + index);
     let item = localStorage.getItem("channel." + index);
 
     clearData();
     if (!item) {
         return;
     }
+    console.log(item);
     let data = JSON.parse(item);
+    if (data.data === undefined || data.schedule === undefined) {
+        data.data = channelData;
+        data.schedule = data;
+    }
     channelData = data.data;
     setData(convertSchedule(data.schedule));
     updateTable();
@@ -775,8 +850,6 @@ function isAnyCheckedProcessAlive() {
 }
 
 function updateButtons() {
-    console.log("xd");
-
     let alive = isProcessAlive(currentChannel);
     document.getElementById("start").hidden = alive;
     document.getElementById("stop").hidden = !alive;
@@ -809,6 +882,9 @@ function updateButtons() {
         let process = processInfo[currentChannel];
         animationStart(process);
     }
+
+    updateData();
+    updateTable();
 }
 
 function waitForKillProcess(channel) {
@@ -838,13 +914,13 @@ function waitForKillProcess(channel) {
 }
 
 function onStart() {
+    selectChannel(currentChannel);
     $.get("/process_alive", function (data) {
         // processInfo = data;
         setProcessInfo(data);
         Object.keys(processInfo).forEach((channel) => waitForKillProcess(channel));
         updateButtons();
     });
-    selectChannel(currentChannel);
     loadListOfTemplates();
 }
 
@@ -855,7 +931,7 @@ function parseSchedule() {
     for (var i = 1; i < n; i++) {
         let point = {
             x: Math.max(parseTimeToMinutes(table.rows[2].cells[i].children[0].value), 1),
-            y: parseFloat(table.rows[1].cells[i].children[0].value)
+            y: parseFloat(table.rows[1].cells[i].children[0].value).toFixed(2)
         };
         schedule.push(point);
     }
@@ -871,7 +947,7 @@ function parseData() {
         let parsedTime = parseTimeToMinutes(table.rows[3].cells[i].children[0].value);
         let point = {
             x: lastTime >= parsedTime ? lastTime + 1 : parsedTime,
-            y: parseFloat(table.rows[1].cells[i].children[0].value)
+            y: parseFloat(table.rows[1].cells[i].children[0].value).toFixed(2)
         };
         data.push(point);
         lastTime = point.x;

@@ -1,84 +1,16 @@
 {
     "schedule": [
         {
-            "interval": 60,
-            "pH": 3.68
+            "interval": 7500,
+            "pH": "1.36"
         },
         {
-            "interval": 60,
-            "pH": 7.27
+            "interval": 2820,
+            "pH": "13.00"
         },
         {
-            "interval": 60,
-            "pH": 7.27
-        },
-        {
-            "interval": 60,
-            "pH": 7.27
-        },
-        {
-            "interval": 60,
-            "pH": 7.27
-        },
-        {
-            "interval": 60,
-            "pH": 7.27
-        },
-        {
-            "interval": 60,
-            "pH": 7.27
-        },
-        {
-            "interval": 60,
-            "pH": 7.27
-        },
-        {
-            "interval": 60,
-            "pH": 7.27
-        },
-        {
-            "interval": 60,
-            "pH": 7.27
-        },
-        {
-            "interval": 60,
-            "pH": 7.27
-        },
-        {
-            "interval": 60,
-            "pH": 7.27
-        },
-        {
-            "interval": 60,
-            "pH": 7.27
-        },
-        {
-            "interval": 60,
-            "pH": 7.27
-        },
-        {
-            "interval": 60,
-            "pH": 7.27
-        },
-        {
-            "interval": 60,
-            "pH": 7.27
-        },
-        {
-            "interval": 60,
-            "pH": 7.27
-        },
-        {
-            "interval": 60,
-            "pH": 7.27
-        },
-        {
-            "interval": 60,
-            "pH": 7.27
-        },
-        {
-            "interval": 60,
-            "pH": 4.21
+            "interval": 15540,
+            "pH": "2.03"
         }
     ],
     "name": "last_schedule",

@@ -19,7 +19,7 @@ def time_chart():
     numberOfChannels = getNumberOfChannels(data)
     legend = 'pH'
 
-    return render_template('time_chart.html', legend=legend, numberOfChannels=numberOfChannels)
+    return render_template('time_chart.html', legend=legend, numberOfChannels=numberOfChannels, data=data)
 
 
 @app.route("/schedule", methods=["GET"])

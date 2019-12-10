@@ -40,9 +40,10 @@ def waitForProcess(channel):
     print(channel)
     print(isProcessAlive(channel))
     if isProcessAlive(channel):
-        output, err = process[channel]["process"].communicate()
-        print(output)
-        print(err)
+        try:
+            output, err = process[channel]["process"].communicate()
+        except:
+            pass
     print("process is done")
 
 

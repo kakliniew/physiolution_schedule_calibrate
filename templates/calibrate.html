@@ -76,7 +76,7 @@
         {#        </div>#}
 
         <button id="calibrate_button" class="calibrate_button" disabled>CALIBRATE</button>
-        <p>Last calibration: <span id="dateLabel"></span></p>
+        <p>Last calibration: <span id="lastCalibrationLabel"></span></p>
         <p>Deviation: <span id="Deviation"></span></p>
     </div>
 </section>
@@ -129,7 +129,7 @@
             data: dataStop,
             success: function (response) {
 
-                dateLabel.innerHTML = response;
+                lastCalibrationLabel.innerHTML = response;
                 calcDeviation();
             }
 
@@ -201,26 +201,25 @@
     }
 
     function setValues() {
-
-
-        if ($('select[name="dropdown"]').val() == "1") {
+        let value = $('select[name="dropdown"]').val();
+        if (value === "1") {
 
             ph1.value = ({{data['calibration']['ph']['chan1']['a'] }}).toFixed(2);
             ph2.value = ({{data['calibration']['ph']['chan1']['b'] }}).toFixed(2);
-            dateLabel.innerHTML = ' {{data['calibration']['ph']['chan1']['date'] }}';
+            lastCalibrationLabel.innerHTML = ' {{data['calibration']['ph']['chan1']['date'] }}';
             temp.value = ({{data['calibration']['ph']['chan1']['Tcal'] }}).toFixed(2);
         }
-        if ($('select[name="dropdown"]').val() == "2") {
+        if (value === "2") {
 
             ph1.value = ({{data['calibration']['ph']['chan2']['a'] }}).toFixed(2);
             ph2.value = ({{data['calibration']['ph']['chan2']['b'] }}).toFixed(2);
-            dateLabel.innerHTML = ' {{data['calibration']['ph']['chan2']['date'] }} ';
+            lastCalibrationLabel.innerHTML = ' {{data['calibration']['ph']['chan2']['date'] }} ';
             temp.value = ({{data['calibration']['ph']['chan2']['Tcal'] }}).toFixed(2);
         }
-        if ($('select[name="dropdown"]').val() == "3") {
+        if (value === "3") {
             ph1.value = ({{data['calibration']['ph']['chan3']['a'] }}).toFixed(2);
             ph2.value = ({{data['calibration']['ph']['chan3']['b'] }}).toFixed(2);
-            dateLabel.innerHTML = ' {{data['calibration']['ph']['chan3']['date'] }}';
+            lastCalibrationLabel.innerHTML = ' {{data['calibration']['ph']['chan3']['date'] }}';
             temp.value = ({{data['calibration']['ph']['chan3']['Tcal'] }}).toFixed(2);
         }
 
