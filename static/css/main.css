@@ -1,8 +1,14 @@
+* {
+    box-sizing: border-box;
+}
+
 body {
     background-color: #161719;
     color: #d8d9da;
 
     font-family: sans-serif;
+
+    margin: 0;
 }
 
 select {
@@ -16,8 +22,10 @@ select {
 
 .panel-container {
     background-color: #212124;
-    border: 1px solid #141414;
+    border: 3px solid #141414;
     padding: 10px 20px;
+
+    margin: 5px 0;
 }
 
 .parent-table {
@@ -113,6 +121,8 @@ input[type=text] {
 }
 
 .outerProgress {
+    display: flex;
+
     border: 3px solid white;
     height: 20px;
     width: 100%;
@@ -133,4 +143,36 @@ input[type=text] {
 
 #templatesList option {
     padding-right: 15px;
+}
+
+.tab {
+
+    overflow: hidden;
+    border: 3px solid #141414;
+    background-color: #212124;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.tab button {
+    color: #d8d9da;
+
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+    font-size: 17px;
+}
+
+.tab button:hover {
+    background-color: #d8d9da;
+    color: #212124;
+}
+
+.tab button.active {
+    background-color: #161719;
+    color: #d8d9da;
 }

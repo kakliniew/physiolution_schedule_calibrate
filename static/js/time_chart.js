@@ -695,6 +695,16 @@ function resetAnimation() {
     progress.value = 0;
 }
 
+function createChannelButton(index, id, onchange) {
+    let button = document.createElement("button");
+    button.textContent = "channel" + index;
+    button.onclick = onchange;
+    button.id = id;
+
+
+    return button;
+}
+
 function createChannelInput(divId, index, id, type, name, onchange) {
     let node = document.createElement('div');
     node.id = divId;
@@ -857,15 +867,14 @@ function updateButtons() {
 
     document.getElementById("channelCheckTitle").textContent = alive ? "Stop this schedule for channels:" : "Start this schedule for channels:";
 
-    let radios = document.getElementById('channelRadios');
+    let buttons = document.getElementById('channelButtons');
     let checkboxes = document.getElementById('channelCheckboxes');
-    radios.innerHTML = "";
+    buttons.innerHTML = "";
     checkboxes.innerHTML = "";
     for (let i = 0; i < numberOfChannels; i++) {
-        radios.appendChild(createChannelInput("channelDiv" + i, i, "channel" + i, "radio", "channel", function () {
-                selectChannel(i);
-            }
-        ));
+        buttons.appendChild(createChannelButton(i, "channel" + i, function () {
+            selectChannel(i);
+        }));
         let checkDiv = createChannelInput("checkDiv" + i, i, "check" + i, "checkbox", "check");
         checkboxes.appendChild(checkDiv);
 
@@ -875,7 +884,7 @@ function updateButtons() {
     document.getElementById("check" + currentChannel).checked = true;
     document.getElementById("check" + currentChannel).disabled = true;
 
-    document.getElementById("channel" + currentChannel).checked = true;
+    document.getElementById("channel" + currentChannel).className = "active";
 
     resetAnimation();
     if (alive) {

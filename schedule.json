@@ -13,6 +13,6 @@
             "pH": "2.03"
         }
     ],
-    "name": "last_schedule",
-    "description": "last run schedule for one of channels"
+    "description": "last run schedule for one of channels",
+    "name": "last_schedule"
 }
