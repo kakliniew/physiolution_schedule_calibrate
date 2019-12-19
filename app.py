@@ -5,8 +5,6 @@ from flask import Flask, jsonify
 from flask import render_template
 from flask import request
 
-import threading
-
 from functions import startProcess, cal1Function, cal2Function, \
     calibrateFunction, save_to_json, getTemp, saveDataToConfFromCablibrateButton, \
     getNumberOfChannels, loadSchedule, waitForProcess, killProcess, getProcessList
@@ -21,7 +19,7 @@ def time_chart():
     numberOfChannels = getNumberOfChannels(data)
     legend = 'pH'
 
-    return render_template('time_chart.html', legend=legend, numberOfChannels=numberOfChannels, data=data)
+    return render_template('time_chart.html', legend=legend, numberOfChannels=numberOfChannels, grafana_url=data["grafana"]["url"])
 
 
 @app.route("/schedule", methods=["GET"])
@@ -93,16 +91,8 @@ def saveTemplate():
 
     return "template_saved"
 
-# calibrateTimeLock = threading.Condition()
-
 @app.route("/calibrate_time", methods=["GET"])
 def calibrateTime():
-    # calibrateTimeLock.acquire()
-    # try:
-    #     calibrateTimeLock.wait()
-    # finally:
-    #     calibrateTimeLock.release()
-
     return data
 
 @app.route("/calibrate", methods=['POST', 'GET'])
@@ -118,11 +108,6 @@ def calibrate():
         elif request.form['cal_button'] == 'calibrate':
             dt_string = saveDataToConfFromCablibrateButton(request, data)
             calibrateFunction()
-            # calibrateTimeLock.acquire()
-            # try:
-            #     calibrateTimeLock.notify_all()
-            # finally:
-            #     calibrateTimeLock.release()
             return dt_string
         elif request.form['cal_button'] == 'update':
             with open('configuration.yaml') as f:

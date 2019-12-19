@@ -12,22 +12,24 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@0.7.4"></script>
 
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'css/main.css') }}"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
+
 
     <script type="text/javascript" src="{{ url_for('static', filename = 'json2.js') }}"></script>
 </head>
 <body onload="onStart()">
-<h1>pH #<span id="channelId">unselected</span></h1>
 <!-- bar chart canvas element -->
 <div id="channelButtons" class="tab">
 </div>
 <div id="divchart" class="chart-container panel-container">
     <canvas id="myChart" width="1800" height="400"></canvas>
-    <button id="recalibrate">Recalibrate</button>
-    <span>Last calibration: <span id="lastCalibrationLabel">{{data['calibration']['ph']['chan1']['date'] }}</span></span>
+    <div class="recalibrateBox">
+        <button id="recalibrate">Recalibrate</button>
+        <span>Last calibration: <span id="lastCalibrationLabel"></span></span>
+    </div>
 </div>
 
 <div class="panel-container">
-    <p id="pointSelected">Point selected:</p>
     <div class="parent-table">
         <table id="tblData" style="width:100%">
             <tr id="firstRow">
@@ -41,18 +43,24 @@
 
             </tr>
             <tr id="thirdRow">
-                <td>Interval</td>
+                <td>Interval [hh:mm]</td>
             </tr>
             <tr id="fourthRow">
-                <td>Time</td>
+                <td>Time [hh:mm]</td>
             </tr>
         </table>
     </div>
     <div>
-        <button id="add">Add step at the end</button>
+        <button id="add">Add point at the end</button>
         <div id="managePoints">
-            <button id="addAfterPoint">Add point after selected</button>
+            <button id="addAfterPoint">Add a point to the right of the selected point</button>
             <button id="removePoint">Remove selected point</button>
+        </div>
+        <br/>
+        <br/>
+        <div>
+            <button id="openModal">Open template list</button>
+            <button id="saveTemplate">Save template</button>
         </div>
     </div>
 </div>
@@ -69,9 +77,17 @@
         </div>
         <button id="start" hidden>Start process for channels</button>
         <button id="stop" hidden>Stop process for channels</button>
-        <button id="saveTemplate">Save template</button>
     </div>
-    <div>
+</div>
+
+<div id="grafana-container" class="panel-container grafana-container">
+    <iframe id="grafana" class="grafana-frame"
+            frameborder="0"></iframe>
+</div>
+
+<div class="parent-modal" id="modal">
+    <div class="modal">
+        <div class="close" id="closeModal"></div>
         <div>
             <label>Templates</label>
         </div>
@@ -86,13 +102,12 @@
     </div>
 </div>
 
-
 <script>
-    var numberOfChannels = {{ numberOfChannels }};
-    var legend = "{{ legend }}";
+    let numberOfChannels = {{ numberOfChannels }};
+    let legend = "{{ legend }}";
+    let grafanaUrl = "{{ grafana_url|safe }}"
 </script>
 <script type="text/javascript" src="{{ url_for('static', filename = 'js/time_chart.js') }}"></script>
-
 </body>
 </html>
 

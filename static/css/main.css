@@ -16,16 +16,27 @@ select {
     color: #d8d9da;
 }
 
-.chart-container {
-    position: relative;
-}
-
 .panel-container {
     background-color: #212124;
     border: 3px solid #141414;
     padding: 10px 20px;
 
     margin: 5px 0;
+}
+
+.chart-container {
+    position: relative;
+    margin-top: 0;
+    border-top: 0;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.recalibrateBox {
+    margin-left: auto;
+    /*display: flex;*/
+    /*justify-content: space-between;*/
 }
 
 .parent-table {
@@ -36,6 +47,10 @@ select {
 
 table {
     border: 1px solid #d8d9da;
+}
+
+table.disabled {
+    background-color: #545454;
 }
 
 th, td {
@@ -50,6 +65,10 @@ tr:hover {
     background-color: #161719;
 }
 
+.disabled tr:hover {
+    background-color: transparent;
+}
+
 input[type=text].time-input {
     color: inherit;
     background: none;
@@ -58,6 +77,10 @@ input[type=text].time-input {
 
 input[type=text] {
     width: 50px;
+}
+
+#managePoints {
+    display: inline-block;
 }
 
 #managePoints:not(.active) {
@@ -146,33 +169,136 @@ input[type=text] {
 }
 
 .tab {
-
     overflow: hidden;
     border: 3px solid #141414;
-    background-color: #212124;
+    border-top: 0;
+    border-bottom: 0;
+    background-color: #161719;
     width: 100%;
-    margin-bottom: 10px;
+    /*margin-bottom: 10px;*/
 }
 
 .tab button {
     color: #d8d9da;
-
-    background-color: inherit;
+    background-color: #161719;
     float: left;
     border: none;
     outline: none;
     cursor: pointer;
     padding: 14px 16px;
-    transition: 0.3s;
+    /*transition: 0.3s;*/
     font-size: 17px;
 }
 
-.tab button:hover {
-    background-color: #d8d9da;
-    color: #212124;
+.tab button.active {
+    background-color: #212124;
 }
 
-.tab button.active {
+.tab button:hover {
+    background-color: #313135;
+}
+
+.tab button.running {
+    /*text-shadow: 0 0 10px green;*/
+
+    /*animation: alternate blink 1s;*/
+    animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes blink {
+    0% {
+        text-shadow: 0 0 2px lime;
+    }
+    50% {
+        text-shadow: 0 0 15px lime;
+    }
+    100% {
+        text-shadow: 0 0 2px lime;
+    }
+}
+
+.running label {
+    text-decoration: line-through;
+}
+
+.modal {
+    position: relative;
+
+    max-width: 300px;
+    width: 100%;
+    min-height: 50px;
     background-color: #161719;
     color: #d8d9da;
+
+    padding: 20px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    align-content: stretch;
+    justify-content: stretch;
+    justify-items: stretch;
+}
+
+.modal > * {
+    width: 100%;
+}
+
+.modal select {
+    width: 100%;
+}
+
+.parent-modal {
+    position: fixed;
+
+    /*display: flex;*/
+    display: none;
+    justify-items: center;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.3);
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    bottom: 0;
+}
+
+.close {
+    position: absolute;
+    right: 2px;
+    top: 2px;
+    width: 32px;
+    height: 32px;
+    opacity: 0.7;
+}
+
+.close:hover {
+    opacity: 1;
+}
+
+.close:before, .close:after {
+    position: absolute;
+    left: 15px;
+    content: ' ';
+    height: 33px;
+    width: 5px;
+    background-color: #ffffff;
+}
+
+.close:before {
+    transform: rotate(45deg);
+}
+
+.close:after {
+    transform: rotate(-45deg);
+}
+
+.grafana-frame {
+    width: 100%;
+    height: 500px;
+}
+
+.grafana-container {
+    display: none;
 }

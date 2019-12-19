@@ -4,7 +4,7 @@ calibration:
       Tcal: '21'
       a: '7.00'
       b: '4.00'
-      date: 16/12/2019 20:44:11
+      date: 17/12/2019 22:45:26
     chan2:
       Tcal: '25.00'
       a: '11.00'
@@ -57,3 +57,6 @@ interface:
   time_step: 60
 os_integration:
   fifo_path: /tmp/pigrad_i2c_bus.fifo
+
+grafana:
+  url: "http://localhost:3001/d-solo/24qOYJZRz/all-ph-channels-in-one-chart-2h-max?orgId=1&refresh=3s&from=1576790845407&to=1576790905407&panelId=4"
