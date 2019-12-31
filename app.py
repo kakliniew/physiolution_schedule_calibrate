@@ -95,19 +95,23 @@ def saveTemplate():
 def calibrateTime():
     return data
 
+@app.route("/calibrate_data", methods=["GET"])
+def calibrateData():
+    return jsonify(data["calibration"]["ph"])
+
 @app.route("/calibrate", methods=['POST', 'GET'])
 def calibrate():
     if request.method == 'POST':
 
         if request.form['cal_button'] == 'cal1':
-            cal1Function()
+            cal1Function(request.form["channel"])
             return "cal1"
         elif request.form['cal_button'] == 'cal2':
-            cal2Function()
+            cal2Function(request.form["channel"])
             return "cal2"
         elif request.form['cal_button'] == 'calibrate':
             dt_string = saveDataToConfFromCablibrateButton(request, data)
-            calibrateFunction()
+            calibrateFunction(request.form["channel"])
             return dt_string
         elif request.form['cal_button'] == 'update':
             with open('configuration.yaml') as f:
@@ -121,8 +125,8 @@ def calibrate():
             returned_value = 5
             return str(returned_value)
     elif request.method == 'GET':
-
-        return render_template('calibrate.html', data=data)
+        numberOfChannels = getNumberOfChannels(data)
+        return render_template('calibrate.html', data=data, numberOfChannels=numberOfChannels)
 
 
 if __name__ == "__main__":

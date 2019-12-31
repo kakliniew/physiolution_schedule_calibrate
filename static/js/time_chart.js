@@ -855,7 +855,7 @@ function resetAnimation() {
 
 function createChannelButton(index, id, onchange) {
     let button = document.createElement("button");
-    button.textContent = "channel" + index;
+    button.textContent = "channel" + (index + 1);
     button.onclick = onchange;
     button.id = id;
 
@@ -872,7 +872,7 @@ function createChannelInput(divId, index, id, type, name, onchange) {
     input.name = name;
     let label = document.createElement("label");
     label.setAttribute("for", input.id);
-    label.textContent = "channel" + index;
+    label.textContent = "channel" + (index + 1);
 
     input.onchange = onchange;
 

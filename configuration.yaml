@@ -59,4 +59,4 @@ os_integration:
   fifo_path: /tmp/pigrad_i2c_bus.fifo
 
 grafana:
-  url: "http://localhost:3001/d-solo/24qOYJZRz/all-ph-channels-in-one-chart-2h-max?orgId=1&refresh=3s&from=1576790845407&to=1576790905407&panelId=4"
+  url: "http://127.0.0.1:3000/d-solo/24qOYJZRz/all-ph-channels-in-one-chart-2h-max?orgId=1&refresh=3s&from=1576919346326&to=1576919406326&panelId=4"

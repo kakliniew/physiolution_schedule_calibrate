@@ -15,11 +15,7 @@
 <section class="calibrate">
     <div class="line">
         <h1>Calibrate</h1>
-        <select name="dropdown">
-
-            <option value="1" selected>Channel 1</option>
-            <option value="2">Channel 2</option>
-            <option value="3">Channel 3</option>
+        <select id="channelList" name="dropdown">
         </select>
     </div>
 
@@ -29,7 +25,7 @@
         <div class="temperature-area">
             <div>
                 <input type="checkbox" id="checkboxTemp" checked onclick="checkboxTempchange();">
-                <span>Temperature</span>
+                <label id="labelTemp" for="checkboxTemp">Temperature (calibration at a set temperature)</label>
             </div>
             <input type="text" id="temp" value="0" size="1" onchange="sendTemp()"/>
             <button id="temp_button" onclick="updateTemp()">Update</button>
@@ -51,29 +47,6 @@
                        onclick="enableButtonFromCal2()">
             </div>
         </section>
-        {#        <div class="line">#}
-        {#            <div class="buttoncal"><label>PH1 </label></div>#}
-        {#            <div class="buttoncal"><label></label></div>#}
-        {#            <div class="buttoncal"><label>PH2 </label></div>#}
-        {#        </div>#}
-        {##}
-        {#        <div class="line">#}
-        {#            <div class="buttoncal"><input type="text" id="ph1"#}
-        {#                                          value={{ data['calibration']['ph']['default_cal']['ph1'] }}  size="1"/></div>#}
-        {#            <div class="buttoncal"><input type="text" id="ph2"#}
-        {#                                          value={{ data['calibration']['ph']['default_cal']['ph2'] }}  size="1"/></div>#}
-        {##}
-        {##}
-        {#        </div>#}
-
-        {#        <div class="line">#}
-        {#            <div class="buttoncal"><input id="cal1_button" type="submit" name="cal1_button" value="CAL1"#}
-        {#                                          onclick="enableButtonFromCal1()"></div>#}
-        {#            <div class="buttoncal"><input id="cal2_button" type="submit" name="cal2_button" value="CAL2"#}
-        {#                                          onclick="enableButtonFromCal2()"></div>#}
-        {##}
-        {##}
-        {#        </div>#}
 
         <button id="calibrate_button" class="calibrate_button" disabled>CALIBRATE</button>
         <p>Last calibration: <span id="lastCalibrationLabel"></span></p>
@@ -83,6 +56,16 @@
 
 
 <script>
+    let numberOfChannels = {{ numberOfChannels }};
+
+    let channelListElement = document.getElementById("channelList");
+    for (let i = 0; i < numberOfChannels; i++) {
+        let channelElement = document.createElement("option");
+        channelElement.value = i;
+        channelElement.textContent = "channel " + (i + 1);
+        channelListElement.appendChild(channelElement);
+    }
+
     var cal1Click = false;
     var cal2Click = false;
     $('select[name="dropdown"]').change(function () {
@@ -96,7 +79,7 @@
 
     document.getElementById("cal1_button").addEventListener("click", function () {
 
-        var dataStop = {'cal_button': 'cal1'};
+        var dataStop = {'cal_button': 'cal1', 'channel': $('select[name="dropdown"]').val()};
         $.ajax({
             type: "POST",
             data: dataStop,
@@ -108,7 +91,7 @@
 
     document.getElementById("cal2_button").addEventListener("click", function () {
 
-        var dataStop = {'cal_button': 'cal2'};
+        var dataStop = {'cal_button': 'cal2', 'channel': $('select[name="dropdown"]').val()};
         $.ajax({
             type: "POST",
             data: dataStop,
@@ -139,14 +122,14 @@
 
     function enableButtonFromCal1() {
         cal1Click = true;
-        if (cal2Click == true) {
+        if (cal2Click === true) {
             document.getElementById("calibrate_button").disabled = false;
         }
     }
 
     function enableButtonFromCal2() {
         cal2Click = true;
-        if (cal1Click == true) {
+        if (cal1Click === true) {
             document.getElementById("calibrate_button").disabled = false;
         }
     }
@@ -190,39 +173,23 @@
         $.ajax({
             type: "POST",
             data: dataStop,
-
             success: function (response) {
                 Deviation.innerHTML = (parseFloat(response) / parseFloat({{data['interface']['example_value']}})) * 100 + "%";
-
             }
-
         });
 
     }
 
     function setValues() {
         let value = $('select[name="dropdown"]').val();
-        if (value === "1") {
-
-            ph1.value = ({{data['calibration']['ph']['chan1']['a'] }}).toFixed(2);
-            ph2.value = ({{data['calibration']['ph']['chan1']['b'] }}).toFixed(2);
-            lastCalibrationLabel.innerHTML = ' {{data['calibration']['ph']['chan1']['date'] }}';
-            temp.value = ({{data['calibration']['ph']['chan1']['Tcal'] }}).toFixed(2);
-        }
-        if (value === "2") {
-
-            ph1.value = ({{data['calibration']['ph']['chan2']['a'] }}).toFixed(2);
-            ph2.value = ({{data['calibration']['ph']['chan2']['b'] }}).toFixed(2);
-            lastCalibrationLabel.innerHTML = ' {{data['calibration']['ph']['chan2']['date'] }} ';
-            temp.value = ({{data['calibration']['ph']['chan2']['Tcal'] }}).toFixed(2);
-        }
-        if (value === "3") {
-            ph1.value = ({{data['calibration']['ph']['chan3']['a'] }}).toFixed(2);
-            ph2.value = ({{data['calibration']['ph']['chan3']['b'] }}).toFixed(2);
-            lastCalibrationLabel.innerHTML = ' {{data['calibration']['ph']['chan3']['date'] }}';
-            temp.value = ({{data['calibration']['ph']['chan3']['Tcal'] }}).toFixed(2);
-        }
-
+        $.get("/calibrate_data", function (data) {
+            let value = $('select[name="dropdown"]').val();
+            let channelData = data["chan" + value];
+            ph1.value = parseFloat(channelData["a"]).toFixed(2);
+            ph2.value = parseFloat(channelData["b"]).toFixed(2);
+            lastCalibrationLabel.innerHTML = channelData["date"];
+            temp.value = parseFloat(channelData["Tcal"]).toFixed(2);
+        });
         cal1Click = false;
         cal2Click = false;
         document.getElementById("calibrate_button").disabled = true;
@@ -230,13 +197,20 @@
 
 
     function checkboxTempchange() {
-        if (document.getElementById('checkboxTemp').checked) {
+        let element = document.getElementById("checkboxTemp");
+        let labelTemp = document.getElementById("labelTemp");
+
+        if (element.checked) {
             temp.disabled = false;
             updateTemp();
+
+            labelTemp.textContent = "Temperature (calibration at a set temperature)";
         } else {
             temp.value = 21.00;
             sendTemp();
             temp.disabled = true;
+
+            labelTemp.textContent = "Temperature (can be calibrated with various temperature)";
         }
     }
 

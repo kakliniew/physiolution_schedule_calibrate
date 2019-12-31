@@ -90,16 +90,19 @@ def terminate_subprocess(process):
     print("terminate")
 
 
-def cal1Function():
+def cal1Function(channel):
     print("cal1")
+    print("channel", channel)
 
 
-def cal2Function():
+def cal2Function(channel):
     print("cal2")
+    print("channel", channel)
 
 
-def calibrateFunction():
+def calibrateFunction(channel):
     print("calibration")
+    print("channel", channel)
 
 
 def getLabelsAndValuesFromJson(filename):
