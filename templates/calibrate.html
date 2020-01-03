@@ -10,7 +10,7 @@
 
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'css/main.css') }}"/>
 </head>
-<body onload="updateTemp()">
+<body onload="setValues()">
 
 <section class="calibrate">
     <div class="line">
@@ -24,10 +24,10 @@
 
         <div class="temperature-area">
             <div>
-                <input type="checkbox" id="checkboxTemp" checked onclick="checkboxTempchange();">
-                <label id="labelTemp" for="checkboxTemp">Temperature (calibration at a set temperature)</label>
+                <input type="checkbox" id="checkboxTemp" onclick="checkboxTempchange();">
+                <label id="labelTemp" for="checkboxTemp">Temperature</label>
             </div>
-            <input type="text" id="temp" value="0" size="1" onchange="sendTemp()"/>
+            <input type="text" id="temp" value="0" size="1"/>
             <button id="temp_button" onclick="updateTemp()">Update</button>
         </div>
 
@@ -36,15 +36,13 @@
                 <label for="ph1">PH1</label>
                 <input type="text" id="ph1"
                        value={{ data['calibration']['ph']['default_cal']['ph1'] }}  size="1"/>
-                <input id="cal1_button" type="submit" name="cal1_button" value="CAL1"
-                       onclick="enableButtonFromCal1()">
+                <input id="cal1_button" type="submit" name="cal1_button" value="CAL1">
             </div>
             <div class="cal">
                 <label for="ph2">PH2</label>
                 <input type="text" id="ph2"
                        value={{ data['calibration']['ph']['default_cal']['ph2'] }}  size="1"/>
-                <input id="cal2_button" type="submit" name="cal2_button" value="CAL2"
-                       onclick="enableButtonFromCal2()">
+                <input id="cal2_button" type="submit" name="cal2_button" value="CAL2">
             </div>
         </section>
 
@@ -69,38 +67,29 @@
     var cal1Click = false;
     var cal2Click = false;
     $('select[name="dropdown"]').change(function () {
-
-
         setValues();
-
-
     });
 
 
     document.getElementById("cal1_button").addEventListener("click", function () {
-
+        enableButtonFromCal1();
         var dataStop = {'cal_button': 'cal1', 'channel': $('select[name="dropdown"]').val()};
         $.ajax({
             type: "POST",
             data: dataStop,
-
-
         });
 
     });
 
     document.getElementById("cal2_button").addEventListener("click", function () {
-
+        enableButtonFromCal2();
         var dataStop = {'cal_button': 'cal2', 'channel': $('select[name="dropdown"]').val()};
         $.ajax({
             type: "POST",
             data: dataStop,
-
-
         });
     });
     document.getElementById("calibrate_button").addEventListener("click", function () {
-
         var dataStop = {
             'cal_button': 'calibrate',
             'channel': $('select[name="dropdown"]').val(),
@@ -117,14 +106,34 @@
             }
 
         });
-
     });
+
+    function updateCalViews()
+    {
+        if (cal1Click)
+        {
+            document.getElementById("cal1_button").className = "clicked";
+        }
+        else
+        {
+            document.getElementById("cal1_button").className = "";
+        }
+        if (cal2Click)
+        {
+            document.getElementById("cal2_button").className = "clicked";
+        }
+        else
+        {
+            document.getElementById("cal2_button").className = "";
+        }
+    }
 
     function enableButtonFromCal1() {
         cal1Click = true;
         if (cal2Click === true) {
             document.getElementById("calibrate_button").disabled = false;
         }
+        updateCalViews();
     }
 
     function enableButtonFromCal2() {
@@ -132,10 +141,11 @@
         if (cal1Click === true) {
             document.getElementById("calibrate_button").disabled = false;
         }
+        updateCalViews();
     }
 
     function updateTemp() {
-        setValues();
+        {#setValues();#}
         var dataStop = {'cal_button': 'update', 'channel': $('select[name="dropdown"]').val()};
         $.ajax({
             type: "POST",
@@ -149,26 +159,22 @@
 
     }
 
-    function sendTemp() {
-
-
-        var dataStop = {'cal_button': 'sendTemp', 'temp': temp.value, 'channel': $('select[name="dropdown"]').val()};
-        $.ajax({
-            type: "POST",
-            data: dataStop,
-
-            success: function (response) {
-
-                temp.value = parseFloat(response).toFixed(2);
-            }
-
-        });
-
-    }
+    {#function sendTemp() {#}
+    {#    var dataStop = {'cal_button': 'sendTemp', 'temp': temp.value, 'channel': $('select[name="dropdown"]').val()};#}
+    {#    $.ajax({#}
+    {#        type: "POST",#}
+    {#        data: dataStop,#}
+    {##}
+    {#        success: function (response) {#}
+    {##}
+    {#            temp.value = parseFloat(response).toFixed(2);#}
+    {#        }#}
+    {##}
+    {#    });#}
+    {##}
+    {#}#}
 
     function calcDeviation() {
-
-
         var dataStop = {'cal_button': 'deviation'};
         $.ajax({
             type: "POST",
@@ -181,7 +187,6 @@
     }
 
     function setValues() {
-        let value = $('select[name="dropdown"]').val();
         $.get("/calibrate_data", function (data) {
             let value = $('select[name="dropdown"]').val();
             let channelData = data["chan" + value];
@@ -192,7 +197,21 @@
         });
         cal1Click = false;
         cal2Click = false;
+        updateCalViews();
         document.getElementById("calibrate_button").disabled = true;
+    }
+
+    function updateTemperature()
+    {
+        $.get("/calibrate_data", function (data) {
+            let value = $('select[name="dropdown"]').val();
+            let channelData = data["chan" + value];
+            if (document.getElementById("checkboxTemp").checked)
+            {
+                temp.value = parseFloat(channelData["Tcal"]).toFixed(2);
+                setTimeout(updateTemperature, 5000);
+            }
+        });
     }
 
 
@@ -201,16 +220,17 @@
         let labelTemp = document.getElementById("labelTemp");
 
         if (element.checked) {
-            temp.disabled = false;
-            updateTemp();
-
-            labelTemp.textContent = "Temperature (calibration at a set temperature)";
-        } else {
-            temp.value = 21.00;
-            sendTemp();
+            {#temp.value = 21.00;#}
+            {#sendTemp();#}
             temp.disabled = true;
-
-            labelTemp.textContent = "Temperature (can be calibrated with various temperature)";
+            temp_button.disabled = true;
+            updateTemperature();
+            {#labelTemp.textContent = "Temperature";#}
+        } else {
+            temp.disabled = false;
+            temp_button.disabled = false;
+            {#updateTemp();#}
+            {#labelTemp.textContent = "Temperature";#}
         }
     }
 

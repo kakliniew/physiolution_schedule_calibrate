@@ -15,6 +15,7 @@ import time
 
 process = {}
 
+
 def isProcessAlive(channel):
     global process
 
@@ -75,6 +76,7 @@ def killProcess(channel):
     if isProcessAlive(channel):
         process[channel]["process"].kill()
 
+
 def getProcessList():
     global process
 
@@ -133,6 +135,11 @@ def loadSchedule(filename):
             return data
     except:
         return {}
+
+
+def loadDataFromConfiguration():
+    with open('configuration.yaml', 'r') as f:
+        return yaml.safe_load(f)
 
 
 def save_to_json(filename, chartname, chartdescription, schedule):

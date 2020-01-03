@@ -1,24 +1,26 @@
 calibration:
   ph:
-    chan1:
-      Tcal: '21'
+    chan0:
+      Tcal: '45.00'
       a: '7.00'
       b: '4.00'
-      date: 17/12/2019 22:45:26
-    chan2:
-      Tcal: '25.00'
+      date: 03/01/2020 19:30:56
+    chan1:
+      Tcal: '28.00'
       a: '11.00'
       b: '4.00'
-      date: 17/10/2019 07:46:43
-    chan3:
-      Tcal: '21.00'
+      date: 30/12/2019 18:19:46
+    chan2:
+      Tcal: '20.00'
       a: '7.00'
       b: '4.00'
-      date: 15/10/2019 22:27:17
+      date: 03/01/2020 18:57:42
     default_cal:
       ph1: 4.0
       ph2: 7.0
   temperature: '25.01'
+grafana:
+  url: http://localhost:3001/d-solo/24qOYJZRz/all-ph-channels-in-one-chart-2h-max?orgId=1&refresh=3s&from=1576790845407&to=1576790905407&panelId=4
 i2c:
   ph_channels:
     1: 64
@@ -57,6 +59,3 @@ interface:
   time_step: 60
 os_integration:
   fifo_path: /tmp/pigrad_i2c_bus.fifo
-
-grafana:
-  url: "http://127.0.0.1:3000/d-solo/24qOYJZRz/all-ph-channels-in-one-chart-2h-max?orgId=1&refresh=3s&from=1576919346326&to=1576919406326&panelId=4"

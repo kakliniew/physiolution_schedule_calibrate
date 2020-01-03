@@ -302,3 +302,7 @@ input[type=text] {
 .grafana-container {
     display: none;
 }
+
+.cal .clicked {
+    border-color: lawngreen;
+}

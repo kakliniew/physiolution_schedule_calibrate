@@ -394,8 +394,8 @@ var chartData = {
 // get chart canvas
 let holder = document.getElementById("myChart");
 let ctx = document.getElementById("myChart").getContext("2d");
-let progress = document.getElementById('animationProgress');
-let processStop = false;
+// let progress = document.getElementById('animationProgress');
+// let processStop = false;
 
 function generateGradient(firstColor, secondColor) {
     let maxX = myChart.chartArea.right - myChart.chartArea.left;
@@ -816,9 +816,10 @@ function animationStart(process) {
     animationInterval = window.setInterval(function () {
         let time = (process.process.start) * 1000 + (new Date().getTime() - process.startTime);
         let maxTime = process.process.time * 1000;
-        progress.value = 0.003 + (time / maxTime);
+        let progress = (time / maxTime);
+        // progress.value = 0.003 + (time / maxTime);
         updateData();
-        if (progress.value >= 1) {
+        if (progress >= 1) {
             stopAnimation();
         }
     }, 10);
@@ -850,7 +851,7 @@ function resetAnimation() {
     stopAnimation();
     animation = null;
     updateData();
-    progress.value = 0;
+    // progress.value = 0;
 }
 
 function createChannelButton(index, id, onchange) {
@@ -1028,7 +1029,7 @@ function updateButtons() {
     let alive = realAlive || startGrafana;
     document.getElementById("start").hidden = alive;
     document.getElementById("stop").hidden = !alive;
-    document.getElementById("outerProgress").className = realAlive ? "outerProgress start" : "outerProgress";
+    // document.getElementById("outerProgress").className = realAlive ? "outerProgress start" : "outerProgress";
 
     document.getElementById("channelCheckTitle").textContent = alive ? "Stop this schedule for channels:" : "Start this schedule for channels:";
 

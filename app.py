@@ -7,24 +7,29 @@ from flask import request
 
 from functions import startProcess, cal1Function, cal2Function, \
     calibrateFunction, save_to_json, getTemp, saveDataToConfFromCablibrateButton, \
-    getNumberOfChannels, loadSchedule, waitForProcess, killProcess, getProcessList
+    getNumberOfChannels, loadSchedule, waitForProcess, killProcess, getProcessList, loadDataFromConfiguration
 
-with open('configuration.yaml') as f:
-    data = yaml.load(f, Loader=yaml.FullLoader)
+# with open('configuration.yaml') as f:
+#     data = yaml.load(f, Loader=yaml.FullLoader)
 
 app = Flask(__name__)
 
+
 @app.route("/time_chart", methods=['GET'])
 def time_chart():
+    data = loadDataFromConfiguration()
+
     numberOfChannels = getNumberOfChannels(data)
     legend = 'pH'
 
-    return render_template('time_chart.html', legend=legend, numberOfChannels=numberOfChannels, grafana_url=data["grafana"]["url"])
+    return render_template('time_chart.html', legend=legend, numberOfChannels=numberOfChannels,
+                           grafana_url=data["grafana"]["url"])
 
 
 @app.route("/schedule", methods=["GET"])
 def getSchedule():
     return {"schedule": loadSchedule("schedule.json")}
+
 
 @app.route("/schedules", methods=["GET"])
 def getListOfSchedules():
@@ -34,10 +39,11 @@ def getListOfSchedules():
     for r, d, f in os.walk(path):
         files.extend(f)
     return jsonify(files)
-    
+
+
 @app.route("/getTemplateSchedule", methods=["GET"])
-def getTemplateSchedule(): 
-    return {"schedule": loadSchedule("./schedules/"+request.args.get("templateName"))}
+def getTemplateSchedule():
+    return {"schedule": loadSchedule("./schedules/" + request.args.get("templateName"))}
 
 
 @app.route("/start_button", methods=["POST"])
@@ -52,16 +58,19 @@ def startButton():
         startProcess(schedule, channel)
     return jsonify(getProcessList())
 
+
 @app.route("/process_alive", methods=["GET"])
 def processAlive():
     return jsonify(getProcessList())
     # return {"alive": isProcessAlive(), "process": getProcess()}
+
 
 @app.route("/wait_process", methods=["POST"])
 def waitProcess():
     channel = request.get_json()["channel"]
     waitForProcess(channel)
     return {"status": "OK", "channels": getProcessList()}
+
 
 @app.route("/stop_button", methods=["POST"])
 def stopButton():
@@ -71,11 +80,12 @@ def stopButton():
         killProcess(channel)
     return "OK"
 
-    
+
 @app.route("/deleteTemplate", methods=["GET"])
 def deleteTemplate():
-    os.remove("./schedules/"+str(request.args.get("templateName")))
+    os.remove("./schedules/" + str(request.args.get("templateName")))
     return "worked"
+
 
 @app.route("/saveTemplate", methods=["POST"])
 def saveTemplate():
@@ -91,13 +101,20 @@ def saveTemplate():
 
     return "template_saved"
 
+
 @app.route("/calibrate_time", methods=["GET"])
 def calibrateTime():
+    data = loadDataFromConfiguration()
+
     return data
+
 
 @app.route("/calibrate_data", methods=["GET"])
 def calibrateData():
+    data = loadDataFromConfiguration()
+
     return jsonify(data["calibration"]["ph"])
+
 
 @app.route("/calibrate", methods=['POST', 'GET'])
 def calibrate():
@@ -110,21 +127,25 @@ def calibrate():
             cal2Function(request.form["channel"])
             return "cal2"
         elif request.form['cal_button'] == 'calibrate':
+            data = loadDataFromConfiguration()
             dt_string = saveDataToConfFromCablibrateButton(request, data)
             calibrateFunction(request.form["channel"])
             return dt_string
         elif request.form['cal_button'] == 'update':
-            with open('configuration.yaml') as f:
-                dataTemp = yaml.load(f, Loader=yaml.FullLoader)
-            print(data['calibration']['ph']['chan' + request.form["channel"]]['Tcal'])
+            # with open('configuration.yaml') as f:
+            #     dataTemp = yaml.load(f, Loader=yaml.FullLoader)
+            data = loadDataFromConfiguration()
+            # print(data['calibration']['ph']['chan' + request.form["channel"]]['Tcal'])
 
             return str(data['calibration']['ph']['chan' + request.form["channel"]]['Tcal'])
         elif request.form['cal_button'] == 'sendTemp':
+            data = loadDataFromConfiguration()
             return getTemp(data)
         elif request.form['cal_button'] == 'deviation':
             returned_value = 5
             return str(returned_value)
     elif request.method == 'GET':
+        data = loadDataFromConfiguration()
         numberOfChannels = getNumberOfChannels(data)
         return render_template('calibrate.html', data=data, numberOfChannels=numberOfChannels)
 
