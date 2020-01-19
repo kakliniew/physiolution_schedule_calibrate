@@ -24,7 +24,7 @@ W celu uruchomienia aplikacji należy:
 "python app.py"
 
 Zostanie wtedy uruchomiony serwer Flask i dostępne będą dwa widoki pod adresami:
-- http://127.0.0.1:5000/time_chart - strona do tworzenia harmonogramów przebiegu eksperymentu
+- http://127.0.0.1:5000/ - strona do tworzenia harmonogramów przebiegu eksperymentu
 - http://127.0.0.1:5000/calibrate - strona do kalibrowania urządzeń pomiarowych
 
 Struktura plików

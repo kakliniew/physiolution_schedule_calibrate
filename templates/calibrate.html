@@ -25,7 +25,7 @@
         <div class="temperature-area">
             <div>
                 <input type="checkbox" id="checkboxTemp" onclick="checkboxTempchange();">
-                <label id="labelTemp" for="checkboxTemp">Temperature</label>
+                <label id="labelTemp" for="checkboxTemp">Temperature (inner sensor)</label>
             </div>
             <input type="text" id="temp" value="0" size="1"/>
             <button id="temp_button" onclick="updateTemp()">Update</button>
@@ -64,8 +64,8 @@
         channelListElement.appendChild(channelElement);
     }
 
-    var cal1Click = false;
-    var cal2Click = false;
+    let cal1Click = false;
+    let cal2Click = false;
     $('select[name="dropdown"]').change(function () {
         setValues();
     });
@@ -108,22 +108,15 @@
         });
     });
 
-    function updateCalViews()
-    {
-        if (cal1Click)
-        {
+    function updateCalViews() {
+        if (cal1Click) {
             document.getElementById("cal1_button").className = "clicked";
-        }
-        else
-        {
+        } else {
             document.getElementById("cal1_button").className = "";
         }
-        if (cal2Click)
-        {
+        if (cal2Click) {
             document.getElementById("cal2_button").className = "clicked";
-        }
-        else
-        {
+        } else {
             document.getElementById("cal2_button").className = "";
         }
     }
@@ -145,7 +138,6 @@
     }
 
     function updateTemp() {
-        {#setValues();#}
         var dataStop = {'cal_button': 'update', 'channel': $('select[name="dropdown"]').val()};
         $.ajax({
             type: "POST",
@@ -158,21 +150,6 @@
         });
 
     }
-
-    {#function sendTemp() {#}
-    {#    var dataStop = {'cal_button': 'sendTemp', 'temp': temp.value, 'channel': $('select[name="dropdown"]').val()};#}
-    {#    $.ajax({#}
-    {#        type: "POST",#}
-    {#        data: dataStop,#}
-    {##}
-    {#        success: function (response) {#}
-    {##}
-    {#            temp.value = parseFloat(response).toFixed(2);#}
-    {#        }#}
-    {##}
-    {#    });#}
-    {##}
-    {#}#}
 
     function calcDeviation() {
         var dataStop = {'cal_button': 'deviation'};
@@ -201,13 +178,11 @@
         document.getElementById("calibrate_button").disabled = true;
     }
 
-    function updateTemperature()
-    {
+    function updateTemperature() {
         $.get("/calibrate_data", function (data) {
             let value = $('select[name="dropdown"]').val();
             let channelData = data["chan" + value];
-            if (document.getElementById("checkboxTemp").checked)
-            {
+            if (document.getElementById("checkboxTemp").checked) {
                 temp.value = parseFloat(channelData["Tcal"]).toFixed(2);
                 setTimeout(updateTemperature, 5000);
             }
@@ -220,19 +195,15 @@
         let labelTemp = document.getElementById("labelTemp");
 
         if (element.checked) {
-            {#temp.value = 21.00;#}
-            {#sendTemp();#}
             temp.disabled = true;
             temp_button.disabled = true;
             updateTemperature();
-            {#labelTemp.textContent = "Temperature";#}
         } else {
             temp.disabled = false;
             temp_button.disabled = false;
-            {#updateTemp();#}
-            {#labelTemp.textContent = "Temperature";#}
         }
     }
+
 
 </script>
 

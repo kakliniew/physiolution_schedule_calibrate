@@ -14,6 +14,7 @@ import json
 import time
 
 process = {}
+monitoring = []
 
 
 def isProcessAlive(channel):
@@ -87,6 +88,23 @@ def getProcessList():
     return data
 
 
+def startMonitoring(channel):
+    global monitoring
+
+    monitoring.append(channel)
+
+
+def stopMonitoring(channel):
+    global monitoring
+    monitoring.remove(channel)
+
+
+def getMonitoring():
+    global monitoring
+
+    return monitoring
+
+
 def terminate_subprocess(process):
     os.killpg(os.getpgid(process.pid), signal.SIGTERM)
     print("terminate")
@@ -105,6 +123,16 @@ def cal2Function(channel):
 def calibrateFunction(channel):
     print("calibration")
     print("channel", channel)
+
+
+def getSensorTemperature(channel) -> int:
+    return 5 * channel
+
+
+def getSensorData(channel):
+    temperature = getSensorTemperature(channel)
+
+    return {"active": (0 < temperature < 100), "temperature": temperature}
 
 
 def getLabelsAndValuesFromJson(filename):
@@ -157,6 +185,7 @@ def save_to_json(filename, chartname, chartdescription, schedule):
 def saveDataToConfFromCablibrateButton(request, data):
     now = datetime.now()
     dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    data['calibration']['ph']['chan' + request.form["channel"]]['Tcal'] = request.form['temperature']
     data['calibration']['ph']['chan' + request.form["channel"]]['a'] = request.form['ph1']
     data['calibration']['ph']['chan' + request.form["channel"]]['b'] = request.form['ph2']
     data['calibration']['ph']['chan' + request.form["channel"]]['date'] = dt_string
@@ -168,13 +197,12 @@ def saveDataToConfFromCablibrateButton(request, data):
 def getNumberOfChannels(data):
     return (len(data['calibration']['ph']) - 1)
 
-
-def getTemp(data):
-    if float(request.form['temp']) > float(data['interface']['temperatureMax']) or float(request.form['temp']) < float(
-            data['interface']['temperatureMin']):
-        data['calibration']['ph']['chan' + request.form["channel"]]['Tcal'] = data['interface']['temperatureDefault']
-    else:
-        data['calibration']['ph']['chan' + request.form["channel"]]['Tcal'] = request.form['temp']
-    with open('configuration.yaml', 'w') as f:
-        yaml.dump(data, f)
-    return str(data['calibration']['ph']['chan' + request.form["channel"]]['Tcal'])
+# def getTemp(data):
+#     if float(request.form['temp']) > float(data['interface']['temperatureMax']) or float(request.form['temp']) < float(
+#             data['interface']['temperatureMin']):
+#         data['calibration']['ph']['chan' + request.form["channel"]]['Tcal'] = data['interface']['temperatureDefault']
+#     else:
+#         data['calibration']['ph']['chan' + request.form["channel"]]['Tcal'] = request.form['temp']
+#     with open('configuration.yaml', 'w') as f:
+#         yaml.dump(data, f)
+#     return str(data['calibration']['ph']['chan' + request.form["channel"]]['Tcal'])

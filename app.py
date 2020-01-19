@@ -5,9 +5,7 @@ from flask import Flask, jsonify
 from flask import render_template
 from flask import request
 
-from functions import startProcess, cal1Function, cal2Function, \
-    calibrateFunction, save_to_json, getTemp, saveDataToConfFromCablibrateButton, \
-    getNumberOfChannels, loadSchedule, waitForProcess, killProcess, getProcessList, loadDataFromConfiguration
+from functions import *
 
 # with open('configuration.yaml') as f:
 #     data = yaml.load(f, Loader=yaml.FullLoader)
@@ -15,14 +13,14 @@ from functions import startProcess, cal1Function, cal2Function, \
 app = Flask(__name__)
 
 
-@app.route("/time_chart", methods=['GET'])
+@app.route("/", methods=['GET'])
 def time_chart():
     data = loadDataFromConfiguration()
 
     numberOfChannels = getNumberOfChannels(data)
     legend = 'pH'
 
-    return render_template('time_chart.html', legend=legend, numberOfChannels=numberOfChannels,
+    return render_template('time_chart.html', data=data, legend=legend, numberOfChannels=numberOfChannels,
                            grafana_url=data["grafana"]["url"])
 
 
@@ -59,9 +57,30 @@ def startButton():
     return jsonify(getProcessList())
 
 
+@app.route("/start_monitoring", methods=["POST"])
+def start_monitoring():
+    channel = request.get_json()["channel"]
+    startMonitoring(channel)
+    return jsonify(getMonitoring())
+
+
+@app.route("/stop_monitoring", methods=["POST"])
+def stop_monitoring():
+    channel = request.get_json()["channel"]
+    stopMonitoring(channel)
+    return jsonify(getMonitoring())
+
+
+@app.route("/monitoring", methods=["GET"])
+def monitoring():
+    return jsonify(getMonitoring())
+
+
 @app.route("/process_alive", methods=["GET"])
 def processAlive():
-    return jsonify(getProcessList())
+    process_list = getProcessList()
+    process_list["monitoring"] = getMonitoring()
+    return jsonify(process_list)
     # return {"alive": isProcessAlive(), "process": getProcess()}
 
 
@@ -116,20 +135,30 @@ def calibrateData():
     return jsonify(data["calibration"]["ph"])
 
 
+@app.route("/sensor_data", methods=["GET"])
+def sensorData():
+    channel = request.args["channel"]
+    sensor_data = getSensorData(int(channel))
+
+    data = loadDataFromConfiguration()
+    sensor_data["default_temperature"] = data["calibration"]["temperature"]
+    return sensor_data
+
+
 @app.route("/calibrate", methods=['POST', 'GET'])
 def calibrate():
     if request.method == 'POST':
 
         if request.form['cal_button'] == 'cal1':
-            cal1Function(request.form["channel"])
+            cal1Function(int(request.form["channel"]))
             return "cal1"
         elif request.form['cal_button'] == 'cal2':
-            cal2Function(request.form["channel"])
+            cal2Function(int(request.form["channel"]))
             return "cal2"
         elif request.form['cal_button'] == 'calibrate':
             data = loadDataFromConfiguration()
             dt_string = saveDataToConfFromCablibrateButton(request, data)
-            calibrateFunction(request.form["channel"])
+            calibrateFunction(int(request.form["channel"]))
             return dt_string
         elif request.form['cal_button'] == 'update':
             # with open('configuration.yaml') as f:
@@ -140,7 +169,7 @@ def calibrate():
             return str(data['calibration']['ph']['chan' + request.form["channel"]]['Tcal'])
         elif request.form['cal_button'] == 'sendTemp':
             data = loadDataFromConfiguration()
-            return getTemp(data)
+            return getSensorTemperature(data)
         elif request.form['cal_button'] == 'deviation':
             returned_value = 5
             return str(returned_value)

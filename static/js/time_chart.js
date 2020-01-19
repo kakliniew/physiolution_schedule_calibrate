@@ -10,8 +10,6 @@ let channelData = {"name": "New workout", schedule: []};
 let processInfo = {};
 let animation = null;
 
-let startGrafana = false;
-
 function getChartName() {
     let name = channelData.name;
     if (!channelData.schedule || !isEqual(channelData.schedule, getSchedule())) {
@@ -22,6 +20,14 @@ function getChartName() {
 
 function isLegendHidden() {
     return myChart.getDatasetMeta(0).hidden;
+}
+
+function setLegendHidden(value) {
+    myChart.getDatasetMeta(0).hidden = value;
+}
+
+function isMonitoring() {
+    return processInfo !== undefined && processInfo.monitoring !== undefined && processInfo["monitoring"].includes(currentChannel);
 }
 
 function isEqual(first, second) {
@@ -49,6 +55,13 @@ function setProcessInfo(data) {
     Object.keys(processInfo).forEach(channel => {
         processInfo[channel].startTime = new Date().getTime();
     });
+}
+
+function setMonitoring(data) {
+    if (!processInfo) {
+        processInfo = {};
+    }
+    processInfo.monitoring = data;
 }
 
 let animationInterval = null;
@@ -307,13 +320,13 @@ function updateChart(functionToParse) {
     saveChannel();
 }
 
-function updateRecalibrateButton() {
-    $.get("/calibrate_time", function (data) {
-        document.getElementById("lastCalibrationLabel").textContent = data['calibration']['ph']['chan' + (currentChannel + 1)]['date'];
-
-        setTimeout(updateRecalibrateButton, 2000);
-    });
-}
+// function updateRecalibrateButton() {
+//     $.get("/calibrate_time", function (data) {
+//         document.getElementById("lastCalibrationLabel").textContent = data['calibration']['ph']['chan' + (currentChannel + 1)]['date'];
+//
+//         setTimeout(updateRecalibrateButton, 2000);
+//     });
+// }
 
 function updateTable() {
     console.log("UPDATE TABLE");
@@ -458,10 +471,6 @@ function closeModal() {
     document.getElementById("modal").style.display = "none";
 }
 
-document.getElementById("recalibrate").addEventListener("click", function () {
-    window.open("/calibrate", "", "height=410,width=450,location=0,menubar=0,status=0,titlebar=0,toolbar=0");
-});
-
 function getOffsetTop(elem) {
     let offsetTop = 0;
     do {
@@ -475,7 +484,7 @@ function getOffsetTop(elem) {
 function updateGrafana() {
     let url = new URL(grafanaUrl);
     let params = url.searchParams;
-    if (isLegendHidden() && startGrafana) {
+    if (isMonitoring()) {
         params.set("from", "now-4m");
         params.set("to", "now+1m");
 
@@ -494,7 +503,7 @@ function updateGrafana() {
         document.getElementById("grafana").src = url.toString();
         showGrafana();
         document.scrollingElement.scrollTop = getOffsetTop(document.getElementById("grafana"))
-    } else if (!startGrafana) {
+    } else if (!isMonitoring()) {
         hideGrafana();
     }
 }
@@ -507,6 +516,34 @@ function hideGrafana() {
     document.getElementById("grafana-container").style.display = "none";
 }
 
+document.getElementById("startMonitoring").addEventListener("click", function () {
+    $.ajax({
+        url: "/start_monitoring",
+        type: "POST",
+        success: function (data) {
+            setMonitoring(data);
+            // updateGrafana();
+            updateButtons();
+        },
+        contentType: "application/json",
+        data: JSON.stringify({channel: currentChannel})
+    });
+});
+
+document.getElementById("stopMonitoring").addEventListener("click", function () {
+    $.ajax({
+        url: "/stop_monitoring",
+        type: "POST",
+        success: function (data) {
+            setMonitoring(data);
+            // updateGrafana();
+            updateButtons();
+        },
+        contentType: "application/json",
+        data: JSON.stringify({channel: currentChannel})
+    });
+});
+
 
 document.getElementById("start").addEventListener("click", function () {
     if (isAnyCheckedProcessAlive()) {
@@ -514,9 +551,6 @@ document.getElementById("start").addEventListener("click", function () {
         return;
     }
     if (isLegendHidden()) {
-        startGrafana = true;
-        updateGrafana();
-        updateButtons();
         return;
     }
     // let url = new URL(grafanaUrl);
@@ -536,7 +570,7 @@ document.getElementById("start").addEventListener("click", function () {
             saveChannels(checkedChannels);
             // processInfo = data;
             setProcessInfo(data);
-            updateGrafana();
+            // updateGrafana();
             checkedChannels.forEach(channel => waitForKillProcess(channel));
             updateButtons();
         },
@@ -547,9 +581,6 @@ document.getElementById("start").addEventListener("click", function () {
 
 document.getElementById("stop").addEventListener("click", function () {
     if (isLegendHidden()) {
-        startGrafana = false;
-        updateGrafana();
-        updateButtons();
         return;
     }
     $.ajax({
@@ -559,7 +590,7 @@ document.getElementById("stop").addEventListener("click", function () {
         data: JSON.stringify({"channels": getCheckedChannels()}),
         success: function (data) {
             if (data === "OK") {
-                updateGrafana();
+                // updateGrafana();
                 updateButtons();
             }
         }
@@ -680,7 +711,7 @@ var myChart = new Chart(ctx, {
                 fontSize: 18
             },
             onClick: function (e, legendItem) {
-                if (isSelectedChannelAlive()) {
+                if (isSelectedChannelAlive() || isMonitoring()) {
                     return;
                 }
 
@@ -889,10 +920,12 @@ function selectChannel(index) {
     localStorage.setItem("current.channel", index);
     loadChannel(index);
 
-    myChart.getDatasetMeta(0).hidden = false;
+    setLegendHidden(false);
     startGrafana = false;
-    updateGrafana();
+    // updateGrafana();
     updateButtons();
+
+    updateLastCalibration();
 }
 
 function getCheckedChannels() {
@@ -942,7 +975,7 @@ function loadTemplateFromFile(selectedTemplate) {
         channelData.name = selectedTemplate;
         channelData.schedule = schedule;
 
-        myChart.getDatasetMeta(0).hidden = false;
+        setLegendHidden(false);
         closeModal();
 
         clearData();
@@ -1025,8 +1058,24 @@ function isAnyCheckedProcessAlive() {
 }
 
 function updateButtons() {
+    if (isMonitoring())
+    {
+        setLegendHidden(true);
+    }
+    updateGrafana();
+    if (isLegendHidden()) {
+        document.getElementById("monitoringContainer").classList.remove("hidden");
+        document.getElementById("startContainer").classList.add("hidden");
+    } else {
+        document.getElementById("monitoringContainer").classList.add("hidden");
+        document.getElementById("startContainer").classList.remove("hidden");
+    }
+    document.getElementById("startMonitoring").hidden = isMonitoring();
+    document.getElementById("stopMonitoring").hidden = !isMonitoring();
+
+
     let realAlive = isProcessAlive(currentChannel);
-    let alive = realAlive || startGrafana;
+    let alive = realAlive || isMonitoring();
     document.getElementById("start").hidden = alive;
     document.getElementById("stop").hidden = !alive;
     // document.getElementById("outerProgress").className = realAlive ? "outerProgress start" : "outerProgress";
@@ -1103,7 +1152,7 @@ function waitForKillProcess(channel) {
                 // processInfo = data.channels;
                 setProcessInfo(data.channels);
                 if (data.status === "OK") {
-                    updateGrafana();
+                    // updateGrafana();
                     updateButtons();
                     stopAnimation();
                 }
@@ -1117,6 +1166,11 @@ function waitForKillProcess(channel) {
 function onStart() {
     selectChannel(currentChannel);
     $.get("/process_alive", function (data) {
+        //TODO monitoring
+        console.log(data.monitoring);
+        console.log(data.monitoring.includes(currentChannel));
+        startGrafana = data.monitoring.includes(currentChannel);
+
         // processInfo = data;
         setProcessInfo(data);
         Object.keys(processInfo).forEach((channel) => waitForKillProcess(channel));
@@ -1124,7 +1178,7 @@ function onStart() {
     });
     loadListOfTemplates();
 
-    updateRecalibrateButton();
+    // updateRecalibrateButton();
 }
 
 function parseSchedule() {

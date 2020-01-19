@@ -3,20 +3,8 @@
     "name": "last_schedule",
     "schedule": [
         {
-            "interval": 120,
-            "pH": "8.64"
-        },
-        {
-            "interval": 120,
-            "pH": "2.91"
-        },
-        {
-            "interval": 180,
-            "pH": "7.00"
-        },
-        {
-            "interval": 240,
-            "pH": "3.46"
+            "pH": "2.62",
+            "interval": 60
         }
     ]
 }

@@ -25,7 +25,7 @@
     <canvas id="myChart" width="1800" height="400"></canvas>
     <div class="recalibrateBox">
         <button id="recalibrate">Recalibrate</button>
-        <span>Last calibration: <span id="lastCalibrationLabel"></span></span>
+        <span>Last calibration: <span class="lastCalibrationLabel"></span></span>
     </div>
 </div>
 
@@ -64,20 +64,18 @@
         </div>
     </div>
 </div>
-<div class="panel-container">
+<div id="startContainer" class="panel-container">
     <div>
-{#        <div class="barContainer">#}
-{#            <div id="outerProgress" class="outerProgress">#}
-{#                <progress class="progress" id="animationProgress" max="1" value="0" style="width: 100%"></progress>#}
-{#            </div>#}
-{#        </div>#}
-
         <span id="channelCheckTitle"></span>
         <div id="channelCheckboxes">
         </div>
         <button id="start" hidden>Start process for channels</button>
         <button id="stop" hidden>Stop process for channels</button>
     </div>
+</div>
+<div id="monitoringContainer" class="panel-container hidden">
+    <button id="startMonitoring" hidden>Start monitoring</button>
+    <button id="stopMonitoring" hidden>Stop monitoring</button>
 </div>
 
 <div id="grafana-container" class="panel-container grafana-container">
@@ -102,12 +100,48 @@
     </div>
 </div>
 
+<div class="parent-modal" id="recalibrateModal">
+    <div class="modal">
+        <div class="close" id="closeRecalibrateModal"></div>
+        <div class="temperature-area">
+            <div>
+                <input type="checkbox" id="checkboxTemp" disabled>
+                <label id="labelTemp" for="checkboxTemp">Temperature (inner sensor)</label>
+            </div>
+            <input type="text" id="temp" value="0" size="1"/>
+            <button id="temp_button" onclick="updateSensor()">Update</button>
+        </div>
+
+        <section class="cal-area">
+            <div class="cal">
+                <label for="ph1">PH1</label>
+                <input type="text" id="ph1"
+                       value={{ data['calibration']['ph']['default_cal']['ph1'] }}  size="1"/>
+                <input id="cal1_button" type="submit" name="cal1_button" value="CAL1">
+            </div>
+            <div class="cal">
+                <label for="ph2">PH2</label>
+                <input type="text" id="ph2"
+                       value={{ data['calibration']['ph']['default_cal']['ph2'] }}  size="1"/>
+                <input id="cal2_button" type="submit" name="cal2_button" value="CAL2">
+            </div>
+        </section>
+
+        <button id="calibrate_button" class="calibrate_button" disabled>CALIBRATE</button>
+        <p>Last calibration: <span class="lastCalibrationLabel"></span></p>
+        <p>Deviation: <span id="Deviation"></span></p>
+    </div>
+</div>
+
 <script>
     let numberOfChannels = {{ numberOfChannels }};
     let legend = "{{ legend }}";
-    let grafanaUrl = "{{ grafana_url|safe }}"
+    let grafanaUrl = "{{ grafana_url|safe }}";
+
+    let interfaceExampleValue = {{data['interface']['example_value']}};
 </script>
 <script type="text/javascript" src="{{ url_for('static', filename = 'js/time_chart.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename = 'js/calibrate.js') }}"></script>
 </body>
 </html>
 

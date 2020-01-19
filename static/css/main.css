@@ -221,10 +221,14 @@ input[type=text] {
     text-decoration: line-through;
 }
 
+#channelCheckboxes .running {
+    display: none;
+}
+
 .modal {
     position: relative;
 
-    max-width: 300px;
+    max-width: 400px;
     width: 100%;
     min-height: 50px;
     background-color: #161719;
@@ -305,4 +309,8 @@ input[type=text] {
 
 .cal .clicked {
     border-color: lawngreen;
+}
+
+.hidden {
+    display: none;
 }
