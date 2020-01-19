@@ -1,10 +1,5 @@
 {
-    "description": "last run schedule for one of channels",
     "name": "last_schedule",
-    "schedule": [
-        {
-            "pH": "2.62",
-            "interval": 60
-        }
-    ]
+    "description": "last run schedule for one of channels",
+    "schedule": []
 }

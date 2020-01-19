@@ -1,66 +1,89 @@
 calibration:
   ph:
-    chan0:
-      Tcal: '32'
-      a: '52'
-      b: '7.0'
-      date: 19/01/2020 10:26:18
-    chan1:
-      Tcal: '30.00'
-      a: '4.0'
-      b: '7.0'
-      date: 19/01/2020 10:22:12
-    chan2:
-      Tcal: '20.00'
-      a: '7.00'
-      b: '4.00'
-      date: 03/01/2020 19:47:46
-    chan3:
-      Tcal: '20.00'
-      a: '7.00'
-      b: '4.00'
-      date: 03/01/2020 19:47:46
     default_cal:
-      ph1: 4.0
-      ph2: 7.0
-  temperature: '25.01'
+      dela: 0.1984
+      delb: -1.3889
+    1:
+      ADC1: 21783
+      ADC2: 10666
+      Tcal: 4.0
+      date: 19-01-2020 23:54
+      pH1: 4.02
+      pH2: 10.1
+    2:
+      ADC1: 21783
+      ADC2: 10666
+      Tcal: 21.1
+      date: 23-09-2019 10:58
+      pH1: 4.02
+      pH2: 10.104
+    3:
+      ADC1: 21783
+      ADC2: 10666
+      Tcal: 21.1
+      date: 23-09-2019 10:58
+      pH1: 4.02
+      pH2: 10.104
+  temperature:
+    1:
+      a: -23.110967
+      b: 103.80229
+    2:
+      a: -23.110967
+      b: 103.80229
+    3:
+      a: -23.110967
+      b: 103.80229
 grafana:
-  url: http://localhost:3001/d-solo/24qOYJZRz/all-ph-channels-in-one-chart-2h-max?orgId=1&refresh=3s&from=1576790845407&to=1576790905407&panelId=4
+  url: http://192.168.80.176:3000/d/8VgVRGmRz/all-ph-channels-in-one-chart-2w-max?orgId=1&refresh=1m&from=now-1h&to=now&kiosk=tv
 i2c:
   ph_channels:
-    1: 64
-    2: 65
-    3: 67
+    1: 72
+    2: 73
+    3: 75
+    4: 74
+    5: 78
+    6: 79
   valves_islands:
     channels:
       1:
         CO2: FEFF
         N2: FDFF
+        false: FFFF
       2:
         CO2: FBFF
         N2: F7FF
+        false: FFFF
       3:
         CO2: EFFF
         N2: DFFF
+        false: FFFF
       4:
         CO2: BFFF
         N2: 7FFF
+        false: FFFF
       5:
         CO2: FFFE
         N2: FFFD
+        false: FFFF
       6:
         CO2: FFFB
         N2: FFF7
+        false: FFFF
     valves_addresses:
       1: 32
 interface:
-  example_value: 50
+  ph1: 4.0
+  ph2: 7.0
   ph_step: 2
   precision: 2
-  temperatureDefault: 21.01
-  temperatureMax: 50
-  temperatureMin: 10
   time: hh:mm
   time_step: 60
 os_integration:
   fifo_path: /tmp/pigrad_i2c_bus.fifo
+  influxdb:
+    dbname: PiGrad
+    host: localhost
+    password: null
+    port: 8086
+    user: null

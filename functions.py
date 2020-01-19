@@ -184,11 +184,11 @@ def save_to_json(filename, chartname, chartdescription, schedule):
 
 def saveDataToConfFromCablibrateButton(request, data):
     now = datetime.now()
-    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-    data['calibration']['ph']['chan' + request.form["channel"]]['Tcal'] = request.form['temperature']
-    data['calibration']['ph']['chan' + request.form["channel"]]['a'] = request.form['ph1']
-    data['calibration']['ph']['chan' + request.form["channel"]]['b'] = request.form['ph2']
-    data['calibration']['ph']['chan' + request.form["channel"]]['date'] = dt_string
+    dt_string = now.strftime('%d-%m-%Y %H:%M')
+    data['calibration']['ph'][int(request.form["channel"])+1]['Tcal'] = float(request.form['temperature'])
+    data['calibration']['ph'][int(request.form["channel"])+1]['pH1'] = float(request.form['ph1'])
+    data['calibration']['ph'][int(request.form["channel"])+1]['pH2'] = float(request.form['ph2'])
+    data['calibration']['ph'][int(request.form["channel"])+1]['date'] = dt_string
     with open('configuration.yaml', 'w') as f:
         yaml.dump(data, f)
     return dt_string

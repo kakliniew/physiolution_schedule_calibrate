@@ -141,7 +141,7 @@ def sensorData():
     sensor_data = getSensorData(int(channel))
 
     data = loadDataFromConfiguration()
-    sensor_data["default_temperature"] = data["calibration"]["temperature"]
+    sensor_data["default_temperature"] = data["interface"]["ph1"]
     return sensor_data
 
 
@@ -166,7 +166,7 @@ def calibrate():
             data = loadDataFromConfiguration()
             # print(data['calibration']['ph']['chan' + request.form["channel"]]['Tcal'])
 
-            return str(data['calibration']['ph']['chan' + request.form["channel"]]['Tcal'])
+            return str(data['calibration']['ph'][request.form["channel"]]['Tcal'])
         elif request.form['cal_button'] == 'sendTemp':
             data = loadDataFromConfiguration()
             return getSensorTemperature(data)
@@ -180,4 +180,4 @@ def calibrate():
 
 
 if __name__ == "__main__":
-    app.run(threaded=True)
+    app.run(host="0.0.0.0", threaded=True)

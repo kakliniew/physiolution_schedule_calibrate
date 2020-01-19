@@ -6,10 +6,10 @@ function initCalibrate() {
     updateCalViews();
 
     $.get("/calibrate_data", function (data) {
-        let channelData = data["chan" + currentChannel];
+        let channelData = data[currentChannel+1];
         if (channelData) {
-            ph1.value = parseFloat(channelData["a"]).toFixed(2);
-            ph2.value = parseFloat(channelData["b"]).toFixed(2);
+            ph1.value = parseFloat(channelData["pH1"]).toFixed(2);
+            ph2.value = parseFloat(channelData["pH2"]).toFixed(2);
         }
     });
 }
@@ -113,7 +113,7 @@ function calcDeviation() {
         type: "POST",
         data: dataStop,
         success: function (response) {
-            Deviation.innerHTML = (parseFloat(response) / parseFloat(interfaceExampleValue)) * 100 + "%";
+            Deviation.innerHTML = (parseFloat(response) / parseFloat(100)) * 100 + "%";
         }
     });
 
@@ -189,7 +189,7 @@ function closeRecalibrateModal() {
 
 function updateLastCalibration() {
     $.get("/calibrate_time", function (data) {
-        let lastCalibratonDate = data['calibration']['ph']['chan' + currentChannel]['date'];
+        let lastCalibratonDate = data['calibration']['ph'][currentChannel+1]['date'];
 
         let elements = document.getElementsByClassName("lastCalibrationLabel");
         for (let i in elements) {
