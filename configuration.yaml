@@ -1,89 +1,98 @@
-calibration:
-  ph:
-    default_cal:
-      dela: 0.1984
-      delb: -1.3889
-    1:
-      ADC1: 21783
-      ADC2: 10666
-      Tcal: 4.0
-      date: 19-01-2020 23:54
-      pH1: 4.02
-      pH2: 10.1
-    2:
-      ADC1: 21783
-      ADC2: 10666
-      Tcal: 21.1
-      date: 23-09-2019 10:58
-      pH1: 4.02
-      pH2: 10.104
-    3:
-      ADC1: 21783
-      ADC2: 10666
-      Tcal: 21.1
-      date: 23-09-2019 10:58
-      pH1: 4.02
-      pH2: 10.104
-  temperature:
-    1:
-      a: -23.110967
-      b: 103.80229
-    2:
-      a: -23.110967
-      b: 103.80229
-    3:
-      a: -23.110967
-      b: 103.80229
-grafana:
-  url: http://192.168.80.176:3000/d/8VgVRGmRz/all-ph-channels-in-one-chart-2w-max?orgId=1&refresh=1m&from=now-1h&to=now&kiosk=tv
-i2c:
-  ph_channels:
-    1: 72
-    2: 73
-    3: 75
-    4: 74
-    5: 78
-    6: 79
-  valves_islands:
-    channels:
-      1:
-        CO2: FEFF
-        N2: FDFF
-        false: FFFF
-      2:
-        CO2: FBFF
-        N2: F7FF
-        false: FFFF
-      3:
-        CO2: EFFF
-        N2: DFFF
-        false: FFFF
-      4:
-        CO2: BFFF
-        N2: 7FFF
-        false: FFFF
-      5:
-        CO2: FFFE
-        N2: FFFD
-        false: FFFF
-      6:
-        CO2: FFFB
-        N2: FFF7
-        false: FFFF
-    valves_addresses:
-      1: 32
-interface:
-  ph1: 4.0
-  ph2: 7.0
-  ph_step: 2
-  precision: 2
-  time: hh:mm
-  time_step: 60
 os_integration:
-  fifo_path: /tmp/pigrad_i2c_bus.fifo
-  influxdb:
-    dbname: PiGrad
-    host: localhost
-    password: null
-    port: 8086
-    user: null
+   fifo_path: /tmp/pigrad_i2c_bus.fifo
+   influxdb:
+      host: localhost
+      port: 8086
+      user:
+      password:
+      dbname: PiGrad
+# https://hexe.physiolution.inside/projects/physio-grad/wiki/Modu%C5%82_PiValve
+i2c:
+   ph_channels:
+      1: 0x40
+      2: 0x41
+      3: 0x48
+
+   valves_islands:
+      valves_addresses:
+         1: 0x20
+
+      channels:
+         1:
+            CO2: FEFF 
+            N2: FDFF
+            OFF: FFFF
+         2:
+            CO2: FBFF
+            N2: F7FF
+            OFF: FFFF
+         3:
+            CO2: EFFF 
+            N2: DFFF
+            OFF: FFFF
+         4:
+            CO2: BFFF
+            N2: 7FFF
+            OFF: FFFF
+         5:
+            CO2: FFFE 
+            N2: FFFD
+            OFF: FFFF
+         6:
+            CO2: FFFB
+            N2: FFF7
+            OFF: FFFF
+
+calibration:
+   temperature:
+      1:
+         a: -23.110967
+         b: 103.80229
+      2:
+         a: -23.110967
+         b: 103.80229
+      3:
+         a: -23.110967
+         b: 103.80229
+   ph:
+      default_cal:
+         dela: 0.1984
+         delb: -1.3889
+         
+      1: 
+         date: '10-01-2020 09:50'
+         Tcal: 33.70
+         pH1: 4.02
+         pH2: 6.98
+         ADC1: 21386
+         ADC2: 15761
+
+      2:
+         date: '10-01-2020 09:50'
+         Tcal: 32.10
+         pH1: 4.02
+         pH2: 6.98
+         ADC1: 20782
+         ADC2: 15154
+         
+      3:
+         date: '10-01-2020 09:57'
+         Tcal: 33.30
+         pH1: 4.02
+         pH2: 6.98
+         ADC1: 22476
+         ADC2: 16951
+        
+
+interface:
+   ph_step: 2
+   precision: 2 # nb digits 
+   time: hh:mm
+   time_step: 60 #seconds
+   ph1: 4.00
+   ph2: 7.00
+
+ 
+grafana:
+  url: "http://192.168.80.176:3000/d/8VgVRGmRz/all-ph-channels-in-one-chart-2w-max?orgId=1&refresh=1m&from=now-1h&to=now&kiosk=tv"
+

@@ -130,7 +130,7 @@ def getSensorTemperature(channel) -> int:
 
 
 def getSensorData(channel):
-    temperature = getSensorTemperature(channel)
+    temperature = int(getSensorTemperature(channel))
 
     return {"active": (0 < temperature < 100), "temperature": temperature}
 
@@ -175,7 +175,7 @@ def save_to_json(filename, chartname, chartdescription, schedule):
     description = chartdescription
 
     JsonToPrint = {'name': name, 'description': description,
-                   'schedule': [{'interval': data["x"] * 60, "pH": data["y"]} for data in
+                   'schedule': [{'interval': data["x"] * 60, "pH": float(data["y"])} for data in
                                 schedule]}
     print(JsonToPrint)
     with open(filename, 'w') as outfile:

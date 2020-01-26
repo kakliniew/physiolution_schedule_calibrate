@@ -537,7 +537,9 @@ document.getElementById("stopMonitoring").addEventListener("click", function () 
         success: function (data) {
             setMonitoring(data);
             // updateGrafana();
+			setLegendHidden(false);
             updateButtons();
+			
         },
         contentType: "application/json",
         data: JSON.stringify({channel: currentChannel})
@@ -1004,6 +1006,12 @@ function saveTemplate() {
         data: JSON.stringify({schedule: getSchedule(), name: templateName, description: templateDescription})
     });
     loadListOfTemplates();
+	
+	channelData.name = templateName+".json";
+	channelData.schedule = getSchedule();
+	updateData();
+ 
+	
 }
 
 function loadChannel(index) {
@@ -1062,6 +1070,7 @@ function updateButtons() {
     {
         setLegendHidden(true);
     }
+	
     updateGrafana();
     if (isLegendHidden()) {
         document.getElementById("monitoringContainer").classList.remove("hidden");

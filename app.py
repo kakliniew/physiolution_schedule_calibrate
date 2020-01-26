@@ -118,7 +118,7 @@ def saveTemplate():
     # save_to_json('./schedules/schedule_'+dt_string+'.json', name, description, schedule)
     save_to_json('./schedules/' + name + '.json', name, description, schedule)
 
-    return "template_saved"
+    return str(name)
 
 
 @app.route("/calibrate_time", methods=["GET"])
