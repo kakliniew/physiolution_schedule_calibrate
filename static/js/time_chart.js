@@ -255,6 +255,10 @@ function getSchedule() {
     return convertData(getData());
 }
 
+function getScheduleFromSelected() {
+    return convertDataFromSelected(getData());
+}
+
 function updateData() {
     myChart.data.datasets[0].label = getChartName();
     // myChart.data.datasets[0].backgroundColor = isProcessAlive(currentChannel) ? "rgba(255, 255, 255, 0.4)" : "rgba(75, 192, 192, 0.4)";
@@ -309,6 +313,24 @@ function convertData(data) {
     return schedule;
 }
 
+function convertDataFromSelected(data) {
+    let schedule = [];
+    let lastValue = data[selectedPoint].x;
+	console.log("last value "+lastValue );
+
+    for (let i = selectedPoint+1; i < data.length; i++) {
+        let point = data[i];
+        let currentInterval = Math.max(point.x - lastValue, 1);
+		console.log("currentInterval "+currentInterval );
+        schedule.push({
+            y: point.y,
+            x: currentInterval
+        });
+        lastValue = point.x;
+    }
+    return schedule;
+}
+
 function updateChart(functionToParse) {
     // if (isSelectedChannelAlive()) {
     //     updateTable();
@@ -346,9 +368,11 @@ function updateTable() {
     removeExcess(timeRow);
 
     document.getElementById("managePoints").className = selectedPoint !== null ? "active" : "";
-
     document.getElementById("tblData").className = (isSelectedChannelAlive() || isLegendHidden()) ? "disabled" : "";
-
+	let realAlive = isProcessAlive(currentChannel);
+    let alive = realAlive || isMonitoring();
+	document.getElementById("start_selected").hidden = alive || selectedPoint=== null;
+	
     saveChannel();
 }
 
@@ -578,6 +602,43 @@ document.getElementById("start").addEventListener("click", function () {
         },
         contentType: "application/json",
         data: JSON.stringify({"schedule": getSchedule(), "channels": checkedChannels})
+    });
+});
+
+document.getElementById("start_selected").addEventListener("click", function () {
+    if (isAnyCheckedProcessAlive()) {
+        alert("Can not to start process for already alive channel");
+        return;
+    }
+    if (isLegendHidden()) {
+        return;
+    }
+	if (selectedPoint === null) {
+        return;
+    }
+    // let url = new URL(grafanaUrl);
+    // let params = url.searchParams;
+    //
+    // params.set("from", "now-4m");
+    // params.set("to", "now+1m");
+    //
+    // document.getElementById("grafana").src = url.toString();
+    // document.getElementById("grafana-container").style.display = "block";
+
+    let checkedChannels = getCheckedChannels();
+    $.ajax({
+        url: "/start_button",
+        type: "POST",
+        success: function (data) {
+            saveChannels(checkedChannels);
+            // processInfo = data;
+            setProcessInfo(data);
+            // updateGrafana();
+            checkedChannels.forEach(channel => waitForKillProcess(channel));
+            updateButtons();
+        },
+        contentType: "application/json",
+        data: JSON.stringify({"schedule": getScheduleFromSelected(), "channels": checkedChannels})
     });
 });
 
@@ -1086,6 +1147,7 @@ function updateButtons() {
     let realAlive = isProcessAlive(currentChannel);
     let alive = realAlive || isMonitoring();
     document.getElementById("start").hidden = alive;
+   document.getElementById("start_selected").hidden = alive || selectedPoint=== null;
     document.getElementById("stop").hidden = !alive;
     // document.getElementById("outerProgress").className = realAlive ? "outerProgress start" : "outerProgress";
 
