@@ -3,8 +3,12 @@
     "description": "last run schedule for one of channels",
     "schedule": [
         {
+            "interval": 410,
+            "pH": 5.75
+        },
+        {
             "interval": 420,
-            "pH": 10.0
+            "pH": 10.84
         },
         {
             "interval": 420,
@@ -12,7 +16,7 @@
         },
         {
             "interval": 420,
-            "pH": 10.0
+            "pH": 7.35
         }
     ]
 }

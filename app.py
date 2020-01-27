@@ -11,6 +11,7 @@ from functions import *
 #     data = yaml.load(f, Loader=yaml.FullLoader)
 
 app = Flask(__name__)
+app.config['JSON_SORT_KEYS'] = False
 
 
 @app.route("/", methods=['GET'])
@@ -50,10 +51,24 @@ def startButton():
     description = "last run schedule for one of channels"
 
     channels = request.get_json()["channels"]
-    schedule = request.get_json()["schedule"]
+    schedule = convertScheduleToSeconds(request.get_json()["schedule"])
     save_to_json('schedule.json', name, description, schedule)
     for channel in channels:
         startProcess(schedule, channel)
+    return jsonify(getProcessList())
+
+
+@app.route("/start_selected_button", methods=["POST"])
+def startSelectedButton():
+    name = "last_schedule"
+    description = "last run schedule for one of channels"
+
+    channels = request.get_json()["channels"]
+    schedule = convertScheduleToSeconds(request.get_json()["schedule"])
+    selected_point = request.get_json()["selected_point"]
+    save_to_json('schedule.json', name, description, schedule[(selected_point + 1):])
+    for channel in channels:
+        startProcess(schedule, channel, selected_point)
     return jsonify(getProcessList())
 
 
@@ -88,7 +103,13 @@ def processAlive():
 def waitProcess():
     channel = request.get_json()["channel"]
     waitForProcess(channel)
-    return {"status": "OK", "channels": getProcessList()}
+    status = "IDK"
+    process = getProcess(channel)
+    if "stop" in process and process["stop"]:
+        status = "STOP"
+    elif "pause" in process and process["pause"]:
+        status = "PAUSE"
+    return {"status": status, "channels": getProcessList()}
 
 
 @app.route("/stop_button", methods=["POST"])
@@ -98,6 +119,22 @@ def stopButton():
     for channel in channels:
         killProcess(channel)
     return "OK"
+
+
+@app.route("/pause_button", methods=["POST"])
+def pauseButton():
+    channel = request.get_json()["channel"]
+    pauseProcess(channel)
+
+    return "OK"
+
+
+@app.route("/resume_button", methods=["POST"])
+def resumeButton():
+    channel = request.get_json()["channel"]
+
+    resumeProcess(channel)
+    return jsonify(getProcessList())
 
 
 @app.route("/deleteTemplate", methods=["GET"])

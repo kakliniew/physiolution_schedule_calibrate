@@ -255,9 +255,9 @@ function getSchedule() {
     return convertData(getData());
 }
 
-function getScheduleFromSelected() {
-    return convertDataFromSelected(getData());
-}
+// function getScheduleFromSelected() {
+//     return convertDataFromSelected(getData());
+// }
 
 function updateData() {
     myChart.data.datasets[0].label = getChartName();
@@ -313,23 +313,23 @@ function convertData(data) {
     return schedule;
 }
 
-function convertDataFromSelected(data) {
-    let schedule = [];
-    let lastValue = data[selectedPoint].x;
-	console.log("last value "+lastValue );
-
-    for (let i = selectedPoint+1; i < data.length; i++) {
-        let point = data[i];
-        let currentInterval = Math.max(point.x - lastValue, 1);
-		console.log("currentInterval "+currentInterval );
-        schedule.push({
-            y: point.y,
-            x: currentInterval
-        });
-        lastValue = point.x;
-    }
-    return schedule;
-}
+// function convertDataFromSelected(data) {
+//     let schedule = [];
+//     let lastValue = data[selectedPoint].x;
+//     console.log("last value " + lastValue);
+//
+//     for (let i = selectedPoint + 1; i < data.length; i++) {
+//         let point = data[i];
+//         let currentInterval = Math.max(point.x - lastValue, 1);
+//         console.log("currentInterval " + currentInterval);
+//         schedule.push({
+//             y: point.y,
+//             x: currentInterval
+//         });
+//         lastValue = point.x;
+//     }
+//     return schedule;
+// }
 
 function updateChart(functionToParse) {
     // if (isSelectedChannelAlive()) {
@@ -369,10 +369,10 @@ function updateTable() {
 
     document.getElementById("managePoints").className = selectedPoint !== null ? "active" : "";
     document.getElementById("tblData").className = (isSelectedChannelAlive() || isLegendHidden()) ? "disabled" : "";
-	let realAlive = isProcessAlive(currentChannel);
+    let realAlive = isProcessAlive(currentChannel);
     let alive = realAlive || isMonitoring();
-	document.getElementById("start_selected").hidden = alive || selectedPoint=== null;
-	
+    document.getElementById("start_selected").hidden = alive || selectedPoint === null;
+
     saveChannel();
 }
 
@@ -435,13 +435,16 @@ let ctx = document.getElementById("myChart").getContext("2d");
 // let processStop = false;
 
 function generateGradient(firstColor, secondColor) {
-    let maxX = myChart.chartArea.right - myChart.chartArea.left;
+    let data = myChart.getDatasetMeta(0).data;
+    let right = data.length > 0 ? data[data.length - 1]._view.x : 0;
+    // console.log(right - );
+    let maxX = Math.max(right - myChart.chartArea.left, 0);
 
     let time;
     let maxTime;
     if (animation !== null) {
-        time = (animation.process.start) * 1000 + (new Date().getTime() - animation.startTime);
-        maxTime = animation.process.time * 1000;
+        time = getAnimationTime();
+        maxTime = getAnimationMaxTime();
     } else {
         time = 1;
         maxTime = 1;
@@ -512,9 +515,10 @@ function updateGrafana() {
         params.set("from", "now-4m");
         params.set("to", "now+1m");
 
-        document.getElementById("grafana").src = url.toString();
+        if (url.toString() !== document.getElementById("grafana").src) {
+            document.getElementById("grafana").src = url.toString();
+        }
         showGrafana();
-        document.scrollingElement.scrollTop = getOffsetTop(document.getElementById("grafana"))
     } else if (isSelectedChannelAlive()) {
         let process = processInfo[currentChannel];
 
@@ -524,16 +528,21 @@ function updateGrafana() {
         params.set("from", (new Date().getTime() - time).toFixed(0));
         params.set("to", (new Date().getTime() - time + maxTime + 60000).toFixed(0));
 
-        document.getElementById("grafana").src = url.toString();
+        if (url.toString() !== document.getElementById("grafana").src) {
+            document.getElementById("grafana").src = url.toString();
+        }
         showGrafana();
-        document.scrollingElement.scrollTop = getOffsetTop(document.getElementById("grafana"))
     } else if (!isMonitoring()) {
         hideGrafana();
     }
 }
 
 function showGrafana() {
+    let display = document.getElementById("grafana-container").style.display;
     document.getElementById("grafana-container").style.display = "block";
+    if (display !== "block") {
+        document.scrollingElement.scrollTop = getOffsetTop(document.getElementById("grafana"));
+    }
 }
 
 function hideGrafana() {
@@ -561,9 +570,9 @@ document.getElementById("stopMonitoring").addEventListener("click", function () 
         success: function (data) {
             setMonitoring(data);
             // updateGrafana();
-			setLegendHidden(false);
+            setLegendHidden(false);
             updateButtons();
-			
+
         },
         contentType: "application/json",
         data: JSON.stringify({channel: currentChannel})
@@ -613,7 +622,7 @@ document.getElementById("start_selected").addEventListener("click", function () 
     if (isLegendHidden()) {
         return;
     }
-	if (selectedPoint === null) {
+    if (selectedPoint === null) {
         return;
     }
     // let url = new URL(grafanaUrl);
@@ -626,19 +635,21 @@ document.getElementById("start_selected").addEventListener("click", function () 
     // document.getElementById("grafana-container").style.display = "block";
 
     let checkedChannels = getCheckedChannels();
+    // console.log("selected point " + selectedPoint);
     $.ajax({
-        url: "/start_button",
+        url: "/start_selected_button",
         type: "POST",
         success: function (data) {
-            saveChannels(checkedChannels);
+            saveChannels([currentChannel]);
             // processInfo = data;
             setProcessInfo(data);
             // updateGrafana();
+            // waitForKillProcess(currentChannel);
             checkedChannels.forEach(channel => waitForKillProcess(channel));
             updateButtons();
         },
         contentType: "application/json",
-        data: JSON.stringify({"schedule": getScheduleFromSelected(), "channels": checkedChannels})
+        data: JSON.stringify({"schedule": getSchedule(), "channels": checkedChannels, "selected_point": selectedPoint})
     });
 });
 
@@ -659,6 +670,64 @@ document.getElementById("stop").addEventListener("click", function () {
         }
     });
 });
+
+document.getElementById("pause").addEventListener("click", function () {
+    if (isLegendHidden()) {
+        return;
+    }
+    $.ajax({
+        url: "/pause_button",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({"channel": currentChannel}),
+        success: function (data) {
+            if (data === "OK") {
+                // updateGrafana();
+                updateButtons();
+
+                waitForKillProcess(currentChannel)
+            }
+        }
+    });
+});
+
+document.getElementById("resume").addEventListener("click", function () {
+    if (isLegendHidden()) {
+        return;
+    }
+    let checkedChannels = getCheckedChannels();
+    $.ajax({
+        url: "/resume_button",
+        type: "POST",
+        success: function (data) {
+            saveChannels(checkedChannels);
+            // processInfo = data;
+            setProcessInfo(data);
+            // updateGrafana();
+            // checkedChannels.forEach(channel => waitForKillProcess(channel));
+            waitForKillProcess(currentChannel);
+            updateButtons();
+        },
+        contentType: "application/json",
+        data: JSON.stringify({"channel": currentChannel})
+    });
+    // if (isLegendHidden()) {
+    //     return;
+    // }
+    // $.ajax({
+    //     url: "/resume_button",
+    //     type: "POST",
+    //     contentType: "application/json",
+    //     data: JSON.stringify({"channels": getCheckedChannels()}),
+    //     success: function (data) {
+    //         if (data === "OK") {
+    //             // updateGrafana();
+    //             updateButtons();
+    //         }
+    //     }
+    // });
+});
+
 document.getElementById("add").addEventListener("click", function () {
     let schedule = getSchedule();
     let x = schedule.length > 0 ? schedule[schedule.length - 1].x : 7;
@@ -900,6 +969,18 @@ function selectPoint(index) {
     updateData();
 }
 
+function getAnimationTime() {
+    let time = (animation.process.start) * 1000;
+    if (animation.process.pause === undefined || !animation.process.pause) {
+        time += (new Date().getTime() - animation.startTime);
+    }
+    return time;
+}
+
+function getAnimationMaxTime() {
+    return animation.process.time * 1000;
+}
+
 function animationStart(process) {
     resetAnimation();
 
@@ -908,8 +989,8 @@ function animationStart(process) {
     // let time = (process.process.start) * 1000 + (new Date().getTime() - process.startTime);
     // let maxTime = process.process.time * 1000;
     animationInterval = window.setInterval(function () {
-        let time = (process.process.start) * 1000 + (new Date().getTime() - process.startTime);
-        let maxTime = process.process.time * 1000;
+        let time = getAnimationTime();
+        let maxTime = getAnimationMaxTime();
         let progress = (time / maxTime);
         // progress.value = 0.003 + (time / maxTime);
         updateData();
@@ -921,19 +1002,19 @@ function animationStart(process) {
     // startAnimation(progress, process.process.start * 1000, process.process.time * 1000, 10);
 }
 
-function startAnimation(element, time, maxTime, offset) {
-    if (processStop === false) {
-
-        element.value = 0.003 + (time / maxTime);
-        if (element.value >= 1) {
-            return;
-        }
-
-        window.setTimeout(function () {
-            startAnimation(element, time + offset, maxTime, offset);
-        }, Math.min(maxTime - time, offset));
-    }
-}
+// function startAnimation(element, time, maxTime, offset) {
+//     if (processStop === false) {
+//
+//         element.value = 0.003 + (time / maxTime);
+//         if (element.value >= 1) {
+//             return;
+//         }
+//
+//         window.setTimeout(function () {
+//             startAnimation(element, time + offset, maxTime, offset);
+//         }, Math.min(maxTime - time, offset));
+//     }
+// }
 
 function stopAnimation() {
     console.log("stop");
@@ -1067,12 +1148,12 @@ function saveTemplate() {
         data: JSON.stringify({schedule: getSchedule(), name: templateName, description: templateDescription})
     });
     loadListOfTemplates();
-	
-	channelData.name = templateName+".json";
-	channelData.schedule = getSchedule();
-	updateData();
- 
-	
+
+    channelData.name = templateName + ".json";
+    channelData.schedule = getSchedule();
+    updateData();
+
+
 }
 
 function loadChannel(index) {
@@ -1112,7 +1193,15 @@ function isSelectedChannelAlive() {
 }
 
 function isProcessAlive(channel) {
-    return processInfo[channel] !== undefined && processInfo[channel].alive;
+    return (processInfo[channel] !== undefined && processInfo[channel].alive) || isProcessPaused(channel);
+}
+
+function isProcessPaused(channel) {
+    return processInfo[channel] !== undefined && processInfo[channel].process.pause !== undefined && processInfo[channel].process.pause && !isProcessStopped(channel);
+}
+
+function isProcessStopped(channel) {
+    return processInfo[channel] !== undefined && processInfo[channel].process.stop !== undefined && processInfo[channel].process.stop;
 }
 
 function isAnyCheckedProcessAlive() {
@@ -1127,11 +1216,10 @@ function isAnyCheckedProcessAlive() {
 }
 
 function updateButtons() {
-    if (isMonitoring())
-    {
+    if (isMonitoring()) {
         setLegendHidden(true);
     }
-	
+
     updateGrafana();
     if (isLegendHidden()) {
         document.getElementById("monitoringContainer").classList.remove("hidden");
@@ -1145,10 +1233,14 @@ function updateButtons() {
 
 
     let realAlive = isProcessAlive(currentChannel);
-    let alive = realAlive || isMonitoring();
+    // let realAlive = isSelectedChannelAlive();
+    let isPaused = isProcessPaused(currentChannel);
+    let alive = realAlive || isMonitoring() || isPaused;
     document.getElementById("start").hidden = alive;
-   document.getElementById("start_selected").hidden = alive || selectedPoint=== null;
+    document.getElementById("start_selected").hidden = alive || selectedPoint === null;
     document.getElementById("stop").hidden = !alive;
+    document.getElementById("pause").hidden = !alive || isPaused;
+    document.getElementById("resume").hidden = !isPaused;
     // document.getElementById("outerProgress").className = realAlive ? "outerProgress start" : "outerProgress";
 
     document.getElementById("channelCheckTitle").textContent = alive ? "Stop this schedule for channels:" : "Start this schedule for channels:";
@@ -1189,7 +1281,7 @@ function updateButtons() {
     document.getElementById("check" + currentChannel).disabled = true;
 
     resetAnimation();
-    if (realAlive) {
+    if (realAlive || isPaused) {
         let process = processInfo[currentChannel];
         animationStart(process);
     }
@@ -1222,9 +1314,8 @@ function waitForKillProcess(channel) {
             success: function (data) {
                 // processInfo = data.channels;
                 setProcessInfo(data.channels);
-                if (data.status === "OK") {
-                    // updateGrafana();
-                    updateButtons();
+                updateButtons();
+                if (data.status === "STOP") {
                     stopAnimation();
                 }
             },
