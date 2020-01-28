@@ -6,7 +6,7 @@ function initCalibrate() {
     updateCalViews();
 
     $.get("/calibrate_data", function (data) {
-        let channelData = data[(currentChannel+1)+""];
+        let channelData = data[currentChannel+1];
         if (channelData) {
             ph1.value = parseFloat(channelData["pH1"]).toFixed(2);
             ph2.value = parseFloat(channelData["pH2"]).toFixed(2);
