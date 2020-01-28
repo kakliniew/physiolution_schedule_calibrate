@@ -10,8 +10,12 @@ from functions import *
 # with open('configuration.yaml') as f:
 #     data = yaml.load(f, Loader=yaml.FullLoader)
 
+from process import *
+
 app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
+
+process_manager = ProcessManager()
 
 
 @app.route("/", methods=['GET'])
@@ -22,7 +26,7 @@ def time_chart():
     legend = 'pH'
 
     return render_template('time_chart.html', data=data, legend=legend, numberOfChannels=numberOfChannels,
-                           grafana_url=data["grafana"]["url"])
+                           grafana_urls=data["grafana"]["urls"])
 
 
 @app.route("/schedule", methods=["GET"])
@@ -51,11 +55,12 @@ def startButton():
     description = "last run schedule for one of channels"
 
     channels = request.get_json()["channels"]
-    schedule = convertScheduleToSeconds(request.get_json()["schedule"])
-    save_to_json('schedule.json', name, description, schedule)
+    schedule = Schedule(request.get_json()["schedule"])
+    # save_to_json('schedule.json', name, description, schedule)
     for channel in channels:
-        startProcess(schedule, channel)
-    return jsonify(getProcessList())
+        process_manager.start_process(channel, schedule)
+        # startProcess(schedule, channel)
+    return jsonify(process_manager.get_process_list())
 
 
 @app.route("/start_selected_button", methods=["POST"])
@@ -64,12 +69,15 @@ def startSelectedButton():
     description = "last run schedule for one of channels"
 
     channels = request.get_json()["channels"]
-    schedule = convertScheduleToSeconds(request.get_json()["schedule"])
+    schedule = Schedule(request.get_json()["schedule"])
     selected_point = request.get_json()["selected_point"]
-    save_to_json('schedule.json', name, description, schedule[(selected_point + 1):])
+
+    schedule.set_offset_index(selected_point)
+    # save_to_json('schedule.json', name, description, schedule[(selected_point + 1):])
     for channel in channels:
-        startProcess(schedule, channel, selected_point)
-    return jsonify(getProcessList())
+        process_manager.start_process(channel, schedule)
+    #     startProcess(schedule, channel, selected_point)
+    return jsonify(process_manager.get_process_list())
 
 
 @app.route("/start_monitoring", methods=["POST"])
@@ -93,7 +101,7 @@ def monitoring():
 
 @app.route("/process_alive", methods=["GET"])
 def processAlive():
-    process_list = getProcessList()
+    process_list = process_manager.get_process_list()
     process_list["monitoring"] = getMonitoring()
     return jsonify(process_list)
     # return {"alive": isProcessAlive(), "process": getProcess()}
@@ -102,14 +110,8 @@ def processAlive():
 @app.route("/wait_process", methods=["POST"])
 def waitProcess():
     channel = request.get_json()["channel"]
-    waitForProcess(channel)
-    status = "IDK"
-    process = getProcess(channel)
-    if "stop" in process and process["stop"]:
-        status = "STOP"
-    elif "pause" in process and process["pause"]:
-        status = "PAUSE"
-    return {"status": status, "channels": getProcessList()}
+    process_manager.wait_for_process(channel)
+    return jsonify(process_manager.get_process_list())
 
 
 @app.route("/stop_button", methods=["POST"])
@@ -117,24 +119,23 @@ def stopButton():
     channels = request.get_json()["channels"]
 
     for channel in channels:
-        killProcess(channel)
-    return "OK"
+        process_manager.stop_process(channel)
+    return jsonify(process_manager.get_process_list())
 
 
 @app.route("/pause_button", methods=["POST"])
 def pauseButton():
     channel = request.get_json()["channel"]
-    pauseProcess(channel)
-
-    return "OK"
+    process_manager.pause_process(channel)
+    return jsonify(process_manager.get_process_list())
 
 
 @app.route("/resume_button", methods=["POST"])
 def resumeButton():
     channel = request.get_json()["channel"]
+    process_manager.resume_process(channel)
 
-    resumeProcess(channel)
-    return jsonify(getProcessList())
+    return jsonify(process_manager.get_process_list())
 
 
 @app.route("/deleteTemplate", methods=["GET"])

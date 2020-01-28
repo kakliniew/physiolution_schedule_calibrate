@@ -1,39 +1,172 @@
+import time
+import subprocess
+import contextlib
+import json
+from typing import Optional
+import sys
+
+from schedule import *
+
+
 class Process:
     def __init__(self, channel):
-        self.channel = channel
-        self.process = None
-        self.stop = False
-        self.pause = False
+        self._channel = channel
+        self._process = None
+        self._stop = False
+        self._pause = False
 
-    def is_alive(self):
-        return self.process is not None and self.process.poll() is None
+        self._schedule = None
+        self._start_time = None
+        self._pause_time = None
 
-    def __kill(self):
-        if not self.is_alive():
-            return False
-        self.process.kill()
+    def _kill_process(self):
+        self._process.kill()
+        print("zabicie procesu")
         return True
 
+    def _start_process(self):
+        schedule_data = self._schedule.get_schedule()
+        if self._pause and len(schedule_data) > 0:
+            schedule_data[0].x = 999999999
+
+        with open("schedule.json", "w+") as file:
+            json.dump({
+                "name": "last_schedule",
+                "description": "last run schedule_data for one of channels",
+                "schedule": schedule_data.get_output()
+            }, file, indent=4)
+
+        sleep_time = self._schedule.get_duration()
+        if self._pause:
+            sleep_time = 999999999
+        bash_command = "sleep {}".format(sleep_time)
+        self._process = subprocess.Popen(bash_command.split(), stdout=subprocess.PIPE)
+
+        print("proces został wystartowany")
+        return True
+
+    def wait_for_process(self):
+        # try:
+        #     _, _ = self._process.communicate()  # czekanie na ukończenie procesu
+        #
+        #     print("proces został ukończony")
+        #     return True
+        # except:
+        #     print("Unexpected error:", sys.exc_info()[0])
+        with contextlib.suppress(Exception):
+            _, _ = self._process.communicate()  # czekanie na ukończenie procesu
+
+            print("proces został ukończony")
+            return True
+
+    def is_alive(self):
+        if self._stop:
+            return False
+        if self._pause:
+            return True
+        return time.time() - self._start_time < self._schedule.get_duration()
+
     def stop(self):
-        self.__kill()
-        self.stop = True
-        self.start()
+        self._stop = True
+
+        self._kill_process()
 
     def pause(self):
-        self.__kill()
-        self.pause = True
-        self.start()
+        print("try pause")
+        self._pause = True
+        self._pause_time = time.time()
 
-    def start(self):
-        pass
+        self._kill_process()
+        self.wait_for_process()
+
+        self._schedule.set_offset_time(self._pause_time - self._start_time + self._schedule.get_offset_time())
+        self._start_process()
+
+        print("paused")
+
+    def resume(self):
+        print("try resume")
+        self._pause = False
+
+        self._kill_process()
+        self.wait_for_process()
+
+        self._start_time = time.time()
+        self._start_process()
+
+        print("resumed")
+
+    def start(self, schedule):
+        self._pause = False
+        self._stop = False
+
+        self._schedule = schedule
+        self._start_time = time.time()
+        self._start_process()
+
+    def get_process_info(self):
+        return {
+            "channel": self._channel,
+            "alive": self.is_alive(),
+            "pause": self._pause,
+            "start_time": self._start_time, # czas wystartowania procesu (zmienia się po pauzie)
+            "current_time": time.time(), # aktualny czas serwera (potrzebny do obliczenia różnicy czasu)
+            "pause_time": self._pause_time, # czas wciśnięcia pauzy (myślę, że zbędny)
+
+            "offset_time": self._schedule.get_offset_time(), # od początku ma 0 lub czas punktu od jakiego zaczynamy (zmienia się w momencie wciśnięcia pauzy o czas o ile został zatrzymany)
+            "end_time": self._schedule.get_end_time() # ile sekund trwa cały proces
+        }
 
 
 class ProcessManager:
     def __init__(self):
-        self.processes = []
+        self.process_map = {}
 
-    def is_process_alive(self, channel):
-        return channel in self.processes and self.processes[channel].is_alive()
+    def is_process_start(self, channel):
+        process = self.get_process(channel)
+        return process is not None and not process._stop
 
-    def get_process(self, channel):
-        return channel in self.processes if None else self.processes[channel]
+    def get_process(self, channel) -> Optional[Process]:
+        if not channel in self.process_map:
+            return None
+        return self.process_map[channel]
+
+    def start_process(self, channel, schedule) -> Process:
+        process = self.get_process(channel)
+        if process is None:
+            process = Process(channel)
+            self.process_map[channel] = process
+        process.start(schedule)
+        return process
+
+    def stop_process(self, channel):
+        process = self.get_process(channel)
+        if process is not None:
+            process.stop()
+            del self.process_map[channel]
+
+    def pause_process(self, channel):
+        process = self.get_process(channel)
+        if process is not None:
+            process.pause()
+
+    def resume_process(self, channel):
+        process = self.get_process(channel)
+        if process is not None:
+            process.resume()
+
+    def wait_for_process(self, channel):
+        process = self.get_process(channel)
+        if process is None:
+            return None
+        process.wait_for_process()
+        return process
+
+    def get_process_list(self):
+        data = {}
+        for channel in self.process_map:
+            process = self.process_map[channel]
+
+            data[channel] = process.get_process_info()
+
+        return data

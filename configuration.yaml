@@ -94,5 +94,7 @@ interface:
 
  
 grafana:
-  url: "http://192.168.80.176:3000/d/8VgVRGmRz/all-ph-channels-in-one-chart-2w-max?orgId=1&refresh=1m&from=now-1h&to=now&kiosk=tv"
-
+  urls:
+     default: "http://192.168.80.176:3000/d/8VgVRGmRz/all-ph-channels-in-one-chart-2w-max?orgId=1&refresh=1m&from=now-1h&to=now&kiosk=tv"
+     1: "http://1"
+     3: "http://3"

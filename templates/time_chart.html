@@ -140,7 +140,7 @@
 <script>
     let numberOfChannels = {{ numberOfChannels }};
     let legend = "{{ legend }}";
-    let grafanaUrl = "{{ grafana_url|safe }}";
+    let grafanaUrls = {{ grafana_urls|tojson }};
 
    
 </script>

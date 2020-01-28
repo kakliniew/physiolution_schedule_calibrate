@@ -10,6 +10,37 @@ let channelData = {"name": "New workout", schedule: []};
 let processInfo = {};
 let animation = null;
 
+let waitList = [];
+
+function isWait(channel)
+{
+    return waitList.indexOf(channel) >= 0
+}
+
+function addWait(channel)
+{
+    waitList.push(channel);
+}
+
+function removeWait(channel)
+{
+    let index = waitList.indexOf(channel);
+    if (index >= 0)
+    {
+        waitList.splice(index, 1)
+    }
+}
+
+function getGrafanaUrl()
+{
+    let url = grafanaUrls[currentChannel + 1];
+    if (url === undefined)
+    {
+        return grafanaUrls["default"];
+    }
+    return url;
+}
+
 function getChartName() {
     let name = channelData.name;
     if (!channelData.schedule || !isEqual(channelData.schedule, getSchedule())) {
@@ -50,11 +81,28 @@ function isEqual(first, second) {
     return false;
 }
 
+function waitAllProcess()
+{
+    Object.keys(processInfo).forEach(channel => {
+        if (processInfo[channel].alive) {
+            waitForKillProcess(channel);
+        }
+    });
+}
+
 function setProcessInfo(data) {
     processInfo = data;
     Object.keys(processInfo).forEach(channel => {
-        processInfo[channel].startTime = new Date().getTime();
+        processInfo[channel].data = {
+            differenceTime: new Date().getTime() - (processInfo[channel].current_time * 1000)
+        };
+        // processInfo[channel].startTime = new Date().getTime();
     });
+    waitAllProcess();
+}
+
+function setOneProcessInfo(data) {
+    processInfo[data.channel] = data;
 }
 
 function setMonitoring(data) {
@@ -263,8 +311,17 @@ function updateData() {
     myChart.data.datasets[0].label = getChartName();
     // myChart.data.datasets[0].backgroundColor = isProcessAlive(currentChannel) ? "rgba(255, 255, 255, 0.4)" : "rgba(75, 192, 192, 0.4)";
     // myChart.data.datasets[0].borderColor = isProcessAlive(currentChannel) ? "rgb(200, 200, 200)" : "rgb(75, 192, 192)";
-    myChart.data.datasets[0].backgroundColor = generateGradient("rgba(75, 192, 192, 0.4)", "rgba(255, 255, 255, 0.4)");
-    myChart.data.datasets[0].borderColor = generateGradient("rgb(75, 192, 192)", "rgb(200, 200, 200)");
+    myChart.update();
+
+    if (isProcessPaused(currentChannel))
+    {
+        myChart.data.datasets[0].backgroundColor = generateGradient("rgba(255, 215, 96, 0.4)", "rgba(255, 255, 255, 0.4)");
+        myChart.data.datasets[0].borderColor = generateGradient("rgb(255, 215, 96)", "rgb(200, 200, 200)");
+    }
+    else {
+        myChart.data.datasets[0].backgroundColor = generateGradient("rgba(75, 192, 192, 0.4)", "rgba(255, 255, 255, 0.4)");
+        myChart.data.datasets[0].borderColor = generateGradient("rgb(75, 192, 192)", "rgb(200, 200, 200)");
+    }
 
     // for (let i = 0; i < myChart.tooltip.length; i++)
     // {
@@ -292,7 +349,7 @@ function convertSchedule(schedule) {
         actualTime += schedule[i].x;
         data.push({
             x: actualTime,
-            y: schedule[i].y
+            y: parseFloat(schedule[i].y)
         });
     }
     return data;
@@ -305,7 +362,7 @@ function convertData(data) {
         let point = data[i];
         let currentInterval = Math.max(point.x - lastValue, 1);
         schedule.push({
-            y: point.y,
+            y: parseFloat(point.y),
             x: currentInterval
         });
         lastValue = point.x;
@@ -443,12 +500,13 @@ function generateGradient(firstColor, secondColor) {
     let time;
     let maxTime;
     if (animation !== null) {
-        time = getAnimationTime();
-        maxTime = getAnimationMaxTime();
+        time = getProcessTime(animation);
+        maxTime = getProcessMaxTime(animation);
     } else {
         time = 1;
         maxTime = 1;
     }
+
     let x = (0.003 + (time / maxTime)) * maxX;
 
     let gradient = ctx.createLinearGradient(myChart.chartArea.left + x, 0, myChart.chartArea.left + x + 1, 0);
@@ -509,7 +567,7 @@ function getOffsetTop(elem) {
 }
 
 function updateGrafana() {
-    let url = new URL(grafanaUrl);
+    let url = new URL(getGrafanaUrl());
     let params = url.searchParams;
     if (isMonitoring()) {
         params.set("from", "now-4m");
@@ -522,8 +580,8 @@ function updateGrafana() {
     } else if (isSelectedChannelAlive()) {
         let process = processInfo[currentChannel];
 
-        let time = (process.process.start) * 1000 + (new Date().getTime() - process.startTime);
-        let maxTime = process.process.time * 1000;
+        let time = getProcessTime(process);
+        let maxTime = getProcessMaxTime(process);
 
         params.set("from", (new Date().getTime() - time).toFixed(0));
         params.set("to", (new Date().getTime() - time + maxTime + 60000).toFixed(0));
@@ -555,7 +613,6 @@ document.getElementById("startMonitoring").addEventListener("click", function ()
         type: "POST",
         success: function (data) {
             setMonitoring(data);
-            // updateGrafana();
             updateButtons();
         },
         contentType: "application/json",
@@ -569,7 +626,6 @@ document.getElementById("stopMonitoring").addEventListener("click", function () 
         type: "POST",
         success: function (data) {
             setMonitoring(data);
-            // updateGrafana();
             setLegendHidden(false);
             updateButtons();
 
@@ -588,14 +644,6 @@ document.getElementById("start").addEventListener("click", function () {
     if (isLegendHidden()) {
         return;
     }
-    // let url = new URL(grafanaUrl);
-    // let params = url.searchParams;
-    //
-    // params.set("from", "now-4m");
-    // params.set("to", "now+1m");
-    //
-    // document.getElementById("grafana").src = url.toString();
-    // document.getElementById("grafana-container").style.display = "block";
 
     let checkedChannels = getCheckedChannels();
     $.ajax({
@@ -603,10 +651,7 @@ document.getElementById("start").addEventListener("click", function () {
         type: "POST",
         success: function (data) {
             saveChannels(checkedChannels);
-            // processInfo = data;
             setProcessInfo(data);
-            // updateGrafana();
-            checkedChannels.forEach(channel => waitForKillProcess(channel));
             updateButtons();
         },
         contentType: "application/json",
@@ -625,27 +670,14 @@ document.getElementById("start_selected").addEventListener("click", function () 
     if (selectedPoint === null) {
         return;
     }
-    // let url = new URL(grafanaUrl);
-    // let params = url.searchParams;
-    //
-    // params.set("from", "now-4m");
-    // params.set("to", "now+1m");
-    //
-    // document.getElementById("grafana").src = url.toString();
-    // document.getElementById("grafana-container").style.display = "block";
 
     let checkedChannels = getCheckedChannels();
-    // console.log("selected point " + selectedPoint);
     $.ajax({
         url: "/start_selected_button",
         type: "POST",
         success: function (data) {
-            saveChannels([currentChannel]);
-            // processInfo = data;
+            saveChannels(checkedChannels);
             setProcessInfo(data);
-            // updateGrafana();
-            // waitForKillProcess(currentChannel);
-            checkedChannels.forEach(channel => waitForKillProcess(channel));
             updateButtons();
         },
         contentType: "application/json",
@@ -663,10 +695,8 @@ document.getElementById("stop").addEventListener("click", function () {
         contentType: "application/json",
         data: JSON.stringify({"channels": getCheckedChannels()}),
         success: function (data) {
-            if (data === "OK") {
-                // updateGrafana();
-                updateButtons();
-            }
+            setProcessInfo(data);
+            updateButtons();
         }
     });
 });
@@ -681,12 +711,8 @@ document.getElementById("pause").addEventListener("click", function () {
         contentType: "application/json",
         data: JSON.stringify({"channel": currentChannel}),
         success: function (data) {
-            if (data === "OK") {
-                // updateGrafana();
-                updateButtons();
-
-                waitForKillProcess(currentChannel)
-            }
+            setProcessInfo(data);
+            updateButtons();
         }
     });
 });
@@ -695,37 +721,16 @@ document.getElementById("resume").addEventListener("click", function () {
     if (isLegendHidden()) {
         return;
     }
-    let checkedChannels = getCheckedChannels();
     $.ajax({
         url: "/resume_button",
         type: "POST",
         success: function (data) {
-            saveChannels(checkedChannels);
-            // processInfo = data;
             setProcessInfo(data);
-            // updateGrafana();
-            // checkedChannels.forEach(channel => waitForKillProcess(channel));
-            waitForKillProcess(currentChannel);
             updateButtons();
         },
         contentType: "application/json",
         data: JSON.stringify({"channel": currentChannel})
     });
-    // if (isLegendHidden()) {
-    //     return;
-    // }
-    // $.ajax({
-    //     url: "/resume_button",
-    //     type: "POST",
-    //     contentType: "application/json",
-    //     data: JSON.stringify({"channels": getCheckedChannels()}),
-    //     success: function (data) {
-    //         if (data === "OK") {
-    //             // updateGrafana();
-    //             updateButtons();
-    //         }
-    //     }
-    // });
 });
 
 document.getElementById("add").addEventListener("click", function () {
@@ -969,16 +974,23 @@ function selectPoint(index) {
     updateData();
 }
 
-function getAnimationTime() {
-    let time = (animation.process.start) * 1000;
-    if (animation.process.pause === undefined || !animation.process.pause) {
-        time += (new Date().getTime() - animation.startTime);
+
+function getProcessTime(process) {
+    if (process.pause) {
+        return process.offset_time * 1000;
     }
-    return time;
+    return process.offset_time * 1000 + (new Date().getTime() - process.start_time * 1000 - process.data.differenceTime)
+    // return new Date().getTime() - (animation.start_time * 1000) + animation.data.differenceTime;
+    // let time = new Date().getTime()
+    // let time = (animation.process.start) * 1000;
+    // if (!animation.pause) {
+    //     time += (new Date().getTime() - animation.startTime);
+    // }
+    // return time;
 }
 
-function getAnimationMaxTime() {
-    return animation.process.time * 1000;
+function getProcessMaxTime(process) {
+    return process.end_time * 1000;
 }
 
 function animationStart(process) {
@@ -986,11 +998,9 @@ function animationStart(process) {
 
     animation = process;
 
-    // let time = (process.process.start) * 1000 + (new Date().getTime() - process.startTime);
-    // let maxTime = process.process.time * 1000;
     animationInterval = window.setInterval(function () {
-        let time = getAnimationTime();
-        let maxTime = getAnimationMaxTime();
+        let time = getProcessTime(animation);
+        let maxTime = getProcessMaxTime(animation);
         let progress = (time / maxTime);
         // progress.value = 0.003 + (time / maxTime);
         updateData();
@@ -998,27 +1008,10 @@ function animationStart(process) {
             stopAnimation();
         }
     }, 10);
-
-    // startAnimation(progress, process.process.start * 1000, process.process.time * 1000, 10);
 }
-
-// function startAnimation(element, time, maxTime, offset) {
-//     if (processStop === false) {
-//
-//         element.value = 0.003 + (time / maxTime);
-//         if (element.value >= 1) {
-//             return;
-//         }
-//
-//         window.setTimeout(function () {
-//             startAnimation(element, time + offset, maxTime, offset);
-//         }, Math.min(maxTime - time, offset));
-//     }
-// }
 
 function stopAnimation() {
     console.log("stop");
-    // processStop = true;
     animationInterval !== null && clearInterval(animationInterval);
 }
 
@@ -1077,8 +1070,6 @@ function getCheckedChannels() {
     let checkboxes = document.getElementById("channelCheckboxes").getElementsByTagName("input");
 
     for (let i = 0; i < numberOfChannels; i++) {
-        // let checkbox = document.getElementById("check" + i);
-        // if (checkbox && checkbox.checked) {
         if (checkboxes[i].checked) {
             checked.push(i);
         }
@@ -1193,15 +1184,11 @@ function isSelectedChannelAlive() {
 }
 
 function isProcessAlive(channel) {
-    return (processInfo[channel] !== undefined && processInfo[channel].alive) || isProcessPaused(channel);
+    return (processInfo[channel] !== undefined && processInfo[channel].alive);
 }
 
 function isProcessPaused(channel) {
-    return processInfo[channel] !== undefined && processInfo[channel].process.pause !== undefined && processInfo[channel].process.pause && !isProcessStopped(channel);
-}
-
-function isProcessStopped(channel) {
-    return processInfo[channel] !== undefined && processInfo[channel].process.stop !== undefined && processInfo[channel].process.stop;
+    return processInfo[channel] !== undefined && processInfo[channel].pause && isProcessAlive(channel);
 }
 
 function isAnyCheckedProcessAlive() {
@@ -1233,9 +1220,8 @@ function updateButtons() {
 
 
     let realAlive = isProcessAlive(currentChannel);
-    // let realAlive = isSelectedChannelAlive();
     let isPaused = isProcessPaused(currentChannel);
-    let alive = realAlive || isMonitoring() || isPaused;
+    let alive = realAlive || isMonitoring();
     document.getElementById("start").hidden = alive;
     document.getElementById("start_selected").hidden = alive || selectedPoint === null;
     document.getElementById("stop").hidden = !alive;
@@ -1301,23 +1287,24 @@ function updateButtons() {
 
 function waitForKillProcess(channel) {
     channel = parseInt(channel);
+    if (isWait(channel)) {
+        return;
+    }
+    addWait(channel);
     if (isProcessAlive(channel)) {
-        // if (channel === currentChannel) {
-        //     let process = processInfo[channel];
-        //     console.log("TRY START")
-        //     startAnimation(progress, process.process.start * 1000, process.process.time * 1000, 10);
-        // }
-
         $.ajax({
             url: "/wait_process",
             type: "POST",
             success: function (data) {
-                // processInfo = data.channels;
-                setProcessInfo(data.channels);
+                console.log("remove " + channel);
+                removeWait(channel);
+
+                setProcessInfo(data);
                 updateButtons();
-                if (data.status === "STOP") {
-                    stopAnimation();
-                }
+            },
+            error: function() {
+                removeWait(channel);
+                // waitAllProcess();
             },
             contentType: "application/json",
             data: JSON.stringify({"channel": channel})
@@ -1335,7 +1322,6 @@ function onStart() {
 
         // processInfo = data;
         setProcessInfo(data);
-        Object.keys(processInfo).forEach((channel) => waitForKillProcess(channel));
         updateButtons();
     });
     loadListOfTemplates();

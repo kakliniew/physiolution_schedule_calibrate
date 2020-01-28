@@ -1,22 +1,18 @@
 {
     "name": "last_schedule",
-    "description": "last run schedule for one of channels",
-    "schedule": [
+    "description": "last run schedule_data for one of channels",
+    "schedule_data": [
         {
-            "interval": 410,
-            "pH": 5.75
+            "interval": 420,
+            "pH": 8.44
         },
         {
             "interval": 420,
-            "pH": 10.84
+            "pH": 7.94
         },
         {
             "interval": 420,
-            "pH": 10.0
-        },
-        {
-            "interval": 420,
-            "pH": 7.35
+            "pH": 10
         }
     ]
 }
